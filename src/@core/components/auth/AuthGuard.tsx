@@ -1,10 +1,5 @@
-// ** React Imports
 import { ReactNode, ReactElement, useEffect } from 'react'
-
-// ** Next Import
 import { useRouter } from 'next/router'
-
-// ** Hooks Import
 import { useAuth } from 'src/hooks/useAuth'
 
 interface AuthGuardProps {
@@ -22,8 +17,7 @@ const AuthGuard = (props: AuthGuardProps) => {
       if (!router.isReady) {
         return
       }
-
-      if (auth.user === null && !window.localStorage.getItem('userData')) {
+      if (auth.user === null) {
         if (router.asPath !== '/') {
           router.replace({
             pathname: '/login',
@@ -34,7 +28,6 @@ const AuthGuard = (props: AuthGuardProps) => {
         }
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [router.route]
   )
 

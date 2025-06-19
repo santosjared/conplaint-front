@@ -9,14 +9,16 @@ interface Redux {
 
 export const fetchData = createAsyncThunk('user/fetchUser',
     async (filtrs?: { [key: string]: any }) => {
-        if (filtrs) {
+        try {
             const response = await instance.get('/users', {
                 params: filtrs
             })
             return response.data
+        } catch (error) {
+            console.log(error);
+            return { result: [], total: 0 }
         }
-        const response = await instance.get('/users')
-        return response.data
+
     }
 );
 
@@ -67,7 +69,7 @@ export const updateUser = createAsyncThunk('user/updateUser',
 export const dowUser = createAsyncThunk('user/dowUser',
     async (data: { [key: string]: any }, { dispatch }: Redux) => {
         try {
-            const response = await instance.delete(`/users/dow/${data.id}`,)
+            const response = await instance.delete(`/users/dow/${data.id}`)
             Swal.fire({
                 title: '¡Éxito!',
                 text: 'Usuario dado de baja',

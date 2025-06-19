@@ -35,21 +35,39 @@ const showErrors = (field: string, valueLen: number, min: number) => {
 
 const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Props) => {
 
-
     const [showPassword, setShowPassword] = useState(false)
-    const [genders, setGenders] = useState<any[]>([])
     const [roles, setRoles] = useState<any[]>([])
 
     const schema = yup.object().shape({
-        name: yup.string().required('El campo nombres es requerido')
-            .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El nombre solo debe contener letras')
-            .min(4, obj => showErrors('nombres', obj.value.length, obj.min)),
-        lastName: yup.string().required('El campo apellidos es requerido')
+        grade: yup.string().required('El campo grado es requerido'),
+        paternalSurname: yup.string()
+            .transform(value => (value === '' ? undefined : value))
+            .min(4, 'El campo apellido paterno debe tener al menos 4 caracteres')
+            .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo apellido paterno solo debe contener letras')
+            .notRequired(),
+        maternalSurname: yup.string()
+            .transform(value => (value === '' ? undefined : value))
+            .min(4, 'El campo apellido materno debe tener al menos 4 caracteres')
+            .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo apellido materno solo debe contener letras')
+            .notRequired(),
+        firstName: yup.string().required('El campo 1er. nombre es requerido')
             .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo apellido solo debe contener letras')
-            .min(4, obj => showErrors('apellidos', obj.value.length, obj.min)),
+            .min(4, obj => showErrors('1er. nombre', obj.value.length, obj.min)),
+        lastName: yup.string()
+            .transform(value => (value === '' ? undefined : value))
+            .min(4, 'El campo 2do. nombre debe tener al menos 4 caracteres')
+            .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo 2do. nombre solo debe contener letras')
+            .notRequired(),
         email: yup.string().email().required('El campo correo electrónico es requerido'),
         ci: yup.string().required('El campo ci es requerido')
-            .min(4, obj => showErrors('ci', obj.value.length, obj.min)),
+            .min(7, obj => showErrors('ci', obj.value.length, obj.min)),
+        exp: yup.string().required('Seleccione la expedición del carnet'),
+        post: yup.string().required('Seleccione algún cargo'),
+        customPost: yup.string().when('post', {
+            is: 'other',
+            then: (schema) => schema.required('Especifique otro cargo, por favor'),
+            otherwise: (schema) => schema.notRequired(),
+        }),
         phone: yup
             .number()
             .typeError('El celular debe ser un número')
@@ -69,12 +87,7 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                 .transform(value => (value === '' ? undefined : value)) // elimina string vacío
                 .min(8, 'El campo contraseña debe tener al menos 8 caracteres')
                 .notRequired(),
-        otherGender: yup.string().when('gender', {
-            is: 'other',
-            then: schema => schema.required('Por favor, especifique el género'),
-            otherwise: schema => schema.notRequired(),
-        }),
-        gender: yup.string().required('Este campo es obligatorio'),
+        gender: yup.string().required('El campo sexo es obligatorio'),
         rol: yup.string().required('Debe seleccionar algun rol')
 
     })
@@ -93,20 +106,7 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
         mode: 'onChange',
         resolver: yupResolver(schema)
     })
-    const selectedGender = watch('gender');
-
-    useEffect(() => {
-        const fetchGender = async () => {
-            try {
-                const response = await instance.get('/users/genders');
-                setGenders(response.data);
-            } catch (e) {
-                console.log(e)
-            }
-
-        }
-        fetchGender();
-    }, [toggle]);
+    const selectedPost = watch('post');
 
     useEffect(() => {
         const fetchRol = async () => {
@@ -128,14 +128,18 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
 
     const onSubmit = (data: UserType) => {
 
+        const modifiedData = {
+            ...data,
+            post: data.post === 'other' ? data.customPost : data.post,
+        };
+        delete modifiedData.customPost;
         if (mode === 'edit' && defaultValues?._id) {
-            delete data._id;
-            delete data.__v;
-            dispatch(updateUser({ data, id: defaultValues._id, filtrs: { skip: page * pageSize, limit: pageSize } }))
+            delete modifiedData._id;
+            delete modifiedData.__v;
+            dispatch(updateUser({ data: modifiedData, id: defaultValues._id, filtrs: { skip: page * pageSize, limit: pageSize } }))
         } else {
-            dispatch(addUser({ data, filtrs: { skip: page * pageSize, limit: pageSize } }))
+            dispatch(addUser({ data: modifiedData, filtrs: { skip: page * pageSize, limit: pageSize } }))
         }
-
         toggle()
         reset()
     }
@@ -143,7 +147,6 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
         reset()
         toggle()
     }
-
     return (<Box>
         <form autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
             <fieldset style={{ border: '1.5px solid #E0E0E0', borderRadius: 10, paddingTop: 20 }}>
@@ -151,22 +154,104 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                 <Grid container spacing={2}>
                     <Grid item xs={6}>
                         <FormControl fullWidth sx={{ mb: 6 }}>
+                            <InputLabel id="grade-select">Grado</InputLabel>
                             <Controller
-                                name="name"
+                                name="grade"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        {...field}
+                                        labelId="grade-select"
+                                        id="select-grade"
+                                        label="Grado"
+                                        error={Boolean(errors.grade)}
+                                    >
+                                        <MenuItem value='CNL. MSc. CAD.'>
+                                            CNL. MSc. CAD.
+                                        </MenuItem>
+                                        <MenuItem value='TTE.'>
+                                            TTE.
+                                        </MenuItem>
+                                        <MenuItem value='SBTTE.'>
+                                            SBTTE.
+                                        </MenuItem>
+                                        <MenuItem value='SOF. 2DO'>
+                                            SOF. 2DO
+                                        </MenuItem>
+                                        <MenuItem value='SGTO. MY.'>
+                                            SGTO. MY.
+                                        </MenuItem>
+                                        <MenuItem value='SGTO. 1RO.'>
+                                            SGTO. 1RO.
+                                        </MenuItem>
+                                        <MenuItem value='SGTO. 2DO.'>
+                                            SGTO. 2DO.
+                                        </MenuItem>
+                                        <MenuItem value='SGTO.'>
+                                            SGTO.
+                                        </MenuItem>
+                                    </Select>
+                                )}
+                            />
+                            {errors.grade && <FormHelperText sx={{ color: 'error.main' }}>{errors.grade.message}</FormHelperText>}
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <FormControl fullWidth sx={{ mb: 6 }}>
+                            <Controller
+                                name="paternalSurname"
                                 control={control}
                                 rules={{ required: true }}
                                 render={({ field: { value, onChange } }) => (
                                     <TextField
-                                        label='Nombres'
-                                        placeholder='Juan Carlos'
+                                        label='Apellido Paterno'
+                                        placeholder='Manzano'
                                         onChange={onChange}
-                                        error={Boolean(errors.name)}
+                                        error={Boolean(errors.paternalSurname)}
                                         value={value}
 
                                     />
                                 )}
                             />
-                            {errors.name && <FormHelperText sx={{ color: 'error.main' }}>{errors.name.message}</FormHelperText>}
+                            {errors.paternalSurname && <FormHelperText sx={{ color: 'error.main' }}>{errors.paternalSurname.message}</FormHelperText>}
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <FormControl fullWidth sx={{ mb: 6 }}>
+                            <Controller
+                                name="maternalSurname"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field: { value, onChange } }) => (
+                                    <TextField
+                                        label='Apellido Materno'
+                                        placeholder='Lopez'
+                                        onChange={onChange}
+                                        error={Boolean(errors.maternalSurname)}
+                                        value={value}
+                                    />
+                                )}
+                            />
+                            {errors.maternalSurname && <FormHelperText sx={{ color: 'error.main' }}>{errors.maternalSurname.message}</FormHelperText>}
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <FormControl fullWidth sx={{ mb: 6 }}>
+                            <Controller
+                                name="firstName"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field: { value, onChange } }) => (
+                                    <TextField
+                                        label='1er Nombre'
+                                        placeholder='Jhon'
+                                        onChange={onChange}
+                                        error={Boolean(errors.firstName)}
+                                        value={value}
+                                    />
+                                )}
+                            />
+                            {errors.firstName && <FormHelperText sx={{ color: 'error.main' }}>{errors.firstName.message}</FormHelperText>}
                         </FormControl>
                     </Grid>
                     <Grid item xs={6}>
@@ -177,8 +262,8 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                                 rules={{ required: true }}
                                 render={({ field: { value, onChange } }) => (
                                     <TextField
-                                        label='Apellidos'
-                                        placeholder='Benitez Lopez'
+                                        label='2do Nombre'
+                                        placeholder='Doh'
                                         onChange={onChange}
                                         error={Boolean(errors.lastName)}
                                         value={value}
@@ -202,13 +287,11 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                                         label="Género"
                                         error={Boolean(errors.gender)}
                                     >
-                                        {genders.map(value => (
-                                            <MenuItem value={value._id} key={value._id}>
-                                                {value.name}
-                                            </MenuItem>
-                                        ))}
-                                        <MenuItem value='other'>
-                                            otro
+                                        <MenuItem value='M'>
+                                            M
+                                        </MenuItem>
+                                        <MenuItem value='F'>
+                                            F
                                         </MenuItem>
                                     </Select>
                                 )}
@@ -216,26 +299,6 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                             {errors.gender && <FormHelperText sx={{ color: 'error.main' }}>{errors.gender.message}</FormHelperText>}
                         </FormControl>
                     </Grid>
-                    {selectedGender === 'other' &&
-                        <Grid item xs={6}>
-                            <FormControl fullWidth sx={{ mb: 6 }}>
-                                <Controller
-                                    name="otherGender"
-                                    control={control}
-                                    render={({ field: { value, onChange } }) => (
-                                        <TextField
-                                            label='Especificar género'
-                                            placeholder='otro'
-                                            onChange={onChange}
-                                            value={value}
-                                            error={Boolean(errors.otherGender)}
-                                        />
-                                    )}
-                                />
-                                {errors.otherGender && <FormHelperText sx={{ color: 'error.main' }}>{errors.otherGender.message}</FormHelperText>}
-                            </FormControl>
-                        </Grid>
-                    }
                     <Grid item xs={6}>
                         <FormControl fullWidth sx={{ mb: 6 }}>
                             <Controller
@@ -255,6 +318,103 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                             {errors.ci && <FormHelperText sx={{ color: 'error.main' }}>{errors.ci.message}</FormHelperText>}
                         </FormControl>
                     </Grid>
+                    <Grid item xs={6}>
+                        <FormControl fullWidth sx={{ mb: 6 }}>
+                            <InputLabel id="exp-select">Expedido</InputLabel>
+                            <Controller
+                                name="exp"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        {...field}
+                                        labelId="exp-select"
+                                        id="select-exp"
+                                        label="Expedido"
+                                        error={Boolean(errors.exp)}
+                                    >
+                                        <MenuItem value='PT'>
+                                            PT
+                                        </MenuItem>
+                                        <MenuItem value='LP'>
+                                            LP
+                                        </MenuItem>
+                                        <MenuItem value='CH'>
+                                            CH
+                                        </MenuItem>
+                                        <MenuItem value='CB'>
+                                            CB
+                                        </MenuItem>
+                                        <MenuItem value='OR'>
+                                            OR
+                                        </MenuItem>
+                                        <MenuItem value='SR'>
+                                            SR
+                                        </MenuItem>
+                                        <MenuItem value='BN'>
+                                            BN
+                                        </MenuItem>
+                                        <MenuItem value='TO'>
+                                            TO
+                                        </MenuItem>
+                                        <MenuItem value='PA'>
+                                            PA
+                                        </MenuItem>
+                                    </Select>
+                                )}
+                            />
+                            {errors.exp && <FormHelperText sx={{ color: 'error.main' }}>{errors.exp.message}</FormHelperText>}
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <FormControl fullWidth sx={{ mb: 6 }}>
+                            <InputLabel id="post-select">Cargo Actual</InputLabel>
+                            <Controller
+                                name="post"
+                                control={control}
+                                rules={{ required: 'Este campo es requerido' }}
+                                render={({ field }) => (
+                                    <Select
+                                        {...field}
+                                        labelId="post-select"
+                                        id="select-post"
+                                        label="Cargo Actual"
+                                        error={Boolean(errors.post)}
+                                    >
+                                        <MenuItem value='COMANDANTE'>COMANDANTE</MenuItem>
+                                        <MenuItem value='SUB COMANDANTE'>SUB COMANDANTE</MenuItem>
+                                        <MenuItem value='OPERADOR'>OPERADOR</MenuItem>
+                                        <MenuItem value='PATRULLERO'>PATRULLERO</MenuItem>
+                                        <MenuItem value='CONDUCTOR'>CONDUCTOR</MenuItem>
+                                        <MenuItem value='RECEPCIONISTA'>RECEPCIONISTA</MenuItem>
+                                        <MenuItem value='SECRETARIA'>SECRETARIA</MenuItem>
+                                        <MenuItem value='MONITOREO DE CAMARAS'>MONITOREO DE CAMARAS</MenuItem>
+                                        <MenuItem value='other'>OTRO</MenuItem>
+                                    </Select>
+                                )}
+                            />
+                            {errors.post && <FormHelperText sx={{ color: 'error.main' }}>{errors.post.message}</FormHelperText>}
+                        </FormControl>
+                    </Grid>
+                    {selectedPost === 'other' && (
+                        <Grid item xs={6}>
+                            <FormControl fullWidth sx={{ mb: 6 }}>
+                                <Controller
+                                    name="customPost"
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field: { value, onChange } }) => (
+                                        <TextField
+                                            label='Otro cargo'
+                                            placeholder='Especificar cargo'
+                                            onChange={onChange}
+                                            error={Boolean(errors.customPost)}
+                                            value={value}
+                                        />
+                                    )}
+                                />
+                                {errors.customPost && <FormHelperText sx={{ color: 'error.main' }}>{errors.customPost.message}</FormHelperText>}
+                            </FormControl>
+                        </Grid>)}
                     <Grid item xs={6}>
                         <FormControl fullWidth sx={{ mb: 6 }}>
                             <Controller

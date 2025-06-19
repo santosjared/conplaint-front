@@ -20,9 +20,7 @@ const VALID_ACTIONS: Actions[] = ['manage', 'create', 'read', 'update', 'delete'
 
 export const buildAbilityFor = (permissions: Permission[]): AppAbility => {
   const { can, rules } = new AbilityBuilder<Ability<[Actions, Subjects], MongoQuery>>(Ability as any)
-
-  can('read', 'acl')
-
+  if (permissions.length === 0) can('read', 'acl')
   permissions.forEach(permission => {
     const actions = permission.action
       .map(a => a.name)

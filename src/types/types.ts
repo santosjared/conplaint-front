@@ -1,6 +1,5 @@
 
 export type UserType = {
-    name: string,
     lastName: string,
     gender: string,
     email: string,
@@ -8,8 +7,14 @@ export type UserType = {
     phone: string,
     address: string,
     password: string,
-    otherGender: string,
     rol: string
+    grade: string
+    paternalSurname: string
+    maternalSurname: string
+    firstName: string
+    exp: string
+    customPost?: string
+    post: string
     _id?: string
     __v?: string
 }

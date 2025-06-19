@@ -9,30 +9,32 @@ import AddDraw from 'src/components/draw'
 import { RootState, AppDispatch } from 'src/store'
 import { dowUser, fetchData, upUser } from 'src/store/user'
 import { useSelector } from 'react-redux'
-import CustomAvatar from 'src/@core/components/mui/avatar'
-import { getInitials } from 'src/@core/utils/get-initials'
 import CustomChip from 'src/@core/components/mui/chip'
 import AddUser from './register'
 import { UserType } from 'src/types/types'
 import Swal from 'sweetalert2'
+import { instance } from 'src/configs/axios'
 
 interface TypeRol {
     name: string
     _id?: string
 }
-interface TypeGender {
-    name: string
-    _id: string
-}
 interface UsersType {
-    _id: string;
-    name: string;
-    lastName: string;
-    ci: string;
-    address: string;
-    phone: string;
-    gender: TypeGender;
-    email: string;
+    _id: string,
+    lastName: string,
+    gender: string,
+    email: string,
+    ci: string,
+    phone: string,
+    address: string,
+    password: string,
+    grade: string,
+    paternalSurname: string,
+    maternalSurname: string,
+    firstName: string,
+    exp: string,
+    customPost: string
+    post: string
     status: string;
     rol: TypeRol;
 }
@@ -49,21 +51,7 @@ const userRoleObj: UserRoleType = {
     other: { icon: 'mdi:account-outline', color: 'info.main' }
 }
 
-const renderClient = (row: UsersType) => {
-
-    return (
-        <CustomAvatar
-            skin='light'
-            color='primary'
-            sx={{ mr: 3, width: 34, height: 34, fontSize: '1rem' }}
-        >
-            {getInitials(row.name && row.lastName ? `${row.name} ${row.lastName}` : row.name ? row.name : 'Desconocido')}
-        </CustomAvatar>
-    )
-}
-
 const defaultValues: UserType = {
-    name: '',
     lastName: '',
     gender: '',
     email: '',
@@ -71,8 +59,14 @@ const defaultValues: UserType = {
     phone: '',
     address: '',
     password: '',
-    otherGender: '',
-    rol: ''
+    rol: '',
+    grade: '',
+    paternalSurname: '',
+    maternalSurname: '',
+    exp: '',
+    firstName: '',
+    post: '',
+    customPost: ''
 }
 const Users = () => {
 
@@ -86,20 +80,61 @@ const Users = () => {
     const columns = [
         {
             flex: 0.2,
-            minWidth: 230,
-            field: 'fullName',
-            headerName: 'Nombres y Apellidos',
+            minWidth: 90,
+            field: 'grade',
+            sortable: false,
+            headerName: 'Grado',
             renderCell: ({ row }: CellType) => {
                 return (
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        {renderClient(row)}
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', flexDirection: 'column' }}>
-                            <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: theme => `${theme.palette.text.secondary}` }}>{`${row.name} ${row.lastName}`}</Typography>
-                            <Typography noWrap variant='caption'>
-                                {row.email}
-                            </Typography>
-                        </Box>
-                    </Box>
+                    <Typography variant='body2' noWrap>{row.grade}</Typography>
+                )
+            }
+        },
+        {
+            flex: 0.2,
+            minWidth: 90,
+            field: 'paternalSurname',
+            sortable: false,
+            headerName: 'Apellidos Paterno',
+            renderCell: ({ row }: CellType) => {
+                return (
+                    <Typography variant='body2' noWrap>{row.paternalSurname}</Typography>
+                )
+            }
+        },
+        {
+            flex: 0.2,
+            minWidth: 90,
+            field: 'motherSurname',
+            sortable: false,
+            headerName: 'Apellidos Materno',
+            renderCell: ({ row }: CellType) => {
+                return (
+                    <Typography variant='body2' noWrap>{row.maternalSurname}</Typography>
+                )
+            }
+        },
+        {
+            flex: 0.2,
+            minWidth: 90,
+            field: 'firstName',
+            sortable: false,
+            headerName: '1er. Nombre',
+            renderCell: ({ row }: CellType) => {
+                return (
+                    <Typography variant='body2' noWrap>{row.firstName}</Typography>
+                )
+            }
+        },
+        {
+            flex: 0.2,
+            minWidth: 90,
+            field: 'lastName',
+            sortable: false,
+            headerName: '2do. Nombre',
+            renderCell: ({ row }: CellType) => {
+                return (
+                    <Typography variant='body2' noWrap>{row.lastName}</Typography>
                 )
             }
         },
@@ -108,7 +143,7 @@ const Users = () => {
             minWidth: 90,
             field: 'ci',
             sortable: false,
-            headerName: 'CI',
+            headerName: 'C.I.',
             renderCell: ({ row }: CellType) => {
                 return (
                     <Typography variant='body2' noWrap>{row.ci}</Typography>
@@ -118,13 +153,43 @@ const Users = () => {
         {
             flex: 0.2,
             minWidth: 90,
+            field: 'exp',
+            sortable: false,
+            headerName: 'Exp.',
+            renderCell: ({ row }: CellType) => {
+                return (
+                    <Typography variant='body2' noWrap>{row.exp}</Typography>
+                )
+            }
+        },
+        {
+            flex: 0.2,
+            minWidth: 90,
+            field: 'gender',
+            sortable: false,
+            headerName: 'Género',
+            renderCell: ({ row }: CellType) => {
+                return (<Typography noWrap variant='body2'>{row.gender}</Typography>)
+            }
+        },
+        {
+            flex: 0.2,
+            minWidth: 90,
+            field: 'post',
+            sortable: false,
+            headerName: 'Cargo actual',
+            renderCell: ({ row }: CellType) => {
+                return (<Typography noWrap variant='body2'>{row.post}</Typography>)
+            }
+        },
+        {
+            flex: 0.2,
+            minWidth: 90,
             field: 'address',
             sortable: false,
             headerName: 'Dirección',
             renderCell: ({ row }: CellType) => {
-                return (
-                    <Typography variant='body2' noWrap>{row.address}</Typography>
-                )
+                return (<Typography variant='body2' noWrap>{row.address}</Typography>)
             }
         },
         {
@@ -139,18 +204,7 @@ const Users = () => {
                 )
             }
         },
-        {
-            flex: 0.2,
-            minWidth: 90,
-            field: 'gender',
-            sortable: false,
-            headerName: 'Género',
-            renderCell: ({ row }: CellType) => {
-                return (
-                    <Typography noWrap variant='body2'>{row.gender?.name}</Typography>
-                )
-            }
-        },
+
         {
             flex: 0.15,
             field: 'rol',
@@ -217,7 +271,7 @@ const Users = () => {
         const handleDow = async () => {
             setAnchorEl(null)
             const confirme = await Swal.fire({
-                title: `¿Estas seguro dar de baja a ${user.name} ${user.lastName}?`,
+                title: `¿Estas seguro dar de baja a ${user.firstName} ${user.lastName}?`,
                 icon: "warning",
                 showCancelButton: true,
                 cancelButtonColor: "#3085d6",
@@ -233,7 +287,7 @@ const Users = () => {
         const handleUp = async () => {
             setAnchorEl(null)
             const confirme = await Swal.fire({
-                title: `¿Estas seguro de reincorporar ${user.name} ${user.lastName}?`,
+                title: `¿Estas seguro de reincorporar ${user.firstName} ${user.lastName}?`,
                 icon: "warning",
                 showCancelButton: true,
                 cancelButtonColor: "#3085d6",
@@ -250,10 +304,8 @@ const Users = () => {
         const handleEdit = () => {
             setUserData({
                 ...user,
-                gender: user.gender?._id || '',
                 rol: user.rol?._id || '',
-                password: '',
-                otherGender: ''
+                password: ''
             })
             setMode('edit')
             setAnchorEl(null)
@@ -304,6 +356,16 @@ const Users = () => {
 
     const store = useSelector((state: RootState) => state.user)
     useEffect(() => {
+        const initApi = async () => {
+            try {
+                const response = await instance.get('/users');
+                console.log(response)
+            } catch (e) {
+                console.log(e)
+            }
+
+        }
+        // initApi();
         dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
     }, [pageSize, page])
 
@@ -399,6 +461,7 @@ const Users = () => {
     )
 }
 Users.acl = {
+
     action: 'read',
     subject: 'users'
 }

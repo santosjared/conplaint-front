@@ -20,15 +20,29 @@ export type UserDataType = {
   name: string,
   lastName: string,
   email: string,
-  userId: string
+  userId: string,
+  rememberMe?: boolean
 }
 
+export type Tokens = {
+  accesToken: string
+  refreshToken: string
+}
 export type AuthValuesType = {
+  tokens: Tokens
   loading: boolean
+  loadingRefresh: boolean
   logout: () => void
   user: UserDataType | null
   setLoading: (value: boolean) => void
   setUser: (value: UserDataType | null) => void
   login: (params: LoginParams, errorCallback?: ErrCallbackType) => void
-  register: (params: RegisterParams, errorCallback?: ErrCallbackType) => void
+  refresh: () => Promise<void>
+}
+
+export type ApiValuesType = {
+  get: (endpoint: string, param?: {}) => Promise<any>
+  put: (endpoint: string, data: { [key: string]: any; }) => Promise<any>
+  post: (endpoint: string, data: { [key: string]: any; }) => Promise<any>
+  delete: (endpoint: string, param?: {}) => Promise<any>
 }

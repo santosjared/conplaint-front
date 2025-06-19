@@ -5,11 +5,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'src/@core/components/icon';
 import AddDraw from 'src/components/draw';
 import { AppDispatch, RootState } from 'src/store';
-import { deleteRol, fetchData } from 'src/store/role';
+import { deleteRol, fetchData, setRoles } from 'src/store/role';
 import AddRol from './register';
 import { RolType } from 'src/types/types';
 import Swal from 'sweetalert2';
 import Permissions from './permissions';
+import { useApi } from 'src/hooks/useApi';
 
 interface CellType {
     row: RolType
@@ -144,9 +145,16 @@ const Roles = () => {
         }
     ]
 
+    const api = useApi()
     const dispatch = useDispatch<AppDispatch>()
     const store = useSelector((state: RootState) => state.rol)
     useEffect(() => {
+        const initApi = async () => {
+            const response = await api.get('/roles', { filter: '', skip: page * pageSize, limit: pageSize });
+            console.log(response);
+            dispatch(setRoles(response))
+        }
+        // initApi();
         dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
     }, [pageSize, page])
 

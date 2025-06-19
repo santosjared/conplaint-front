@@ -35,22 +35,22 @@ export type NotificationsType = {
   title: string
   subtitle: string
 } & (
-  | { avatarAlt: string; avatarImg: string; avatarText?: never; avatarColor?: never; avatarIcon?: never }
-  | {
+    | { avatarAlt: string; avatarImg: string; avatarText?: never; avatarColor?: never; avatarIcon?: never }
+    | {
       avatarAlt?: never
       avatarImg?: never
       avatarText: string
       avatarIcon?: never
       avatarColor?: ThemeColor
     }
-  | {
+    | {
       avatarAlt?: never
       avatarImg?: never
       avatarText?: never
       avatarIcon: ReactNode
       avatarColor?: ThemeColor
     }
-)
+  )
 interface Props {
   settings: Settings
   notifications: NotificationsType[]
@@ -154,7 +154,7 @@ const NotificationDropdown = (props: Props) => {
     } else {
       return (
         <Avatar skin='light' color={avatarColor}>
-          {getInitials(avatarText as string)}
+          {getInitials(avatarText as string, avatarText as string)}
         </Avatar>
       )
     }
@@ -165,13 +165,14 @@ const NotificationDropdown = (props: Props) => {
       <IconButton color='inherit' aria-haspopup='true' onClick={handleDropdownOpen} aria-controls='customized-menu'>
         <Badge
           color='error'
-          variant='dot'
+          variant='standard'
           invisible={!notifications.length}
+          badgeContent={notifications.length}
           sx={{
             '& .MuiBadge-badge': { top: 4, right: 4, boxShadow: theme => `0 0 0 2px ${theme.palette.background.paper}` }
           }}
         >
-          <Icon icon='mdi:bell-outline' />
+          <Icon icon='mdi:bell-outline' fontSize={35} />
         </Badge>
       </IconButton>
       <Menu
@@ -192,7 +193,7 @@ const NotificationDropdown = (props: Props) => {
               skin='light'
               size='small'
               color='primary'
-              label={`${notifications.length} New`}
+              label={`${notifications.length} Nuevos`}
               sx={{ height: 20, fontSize: '0.75rem', fontWeight: 500, borderRadius: '10px' }}
             />
           </Box>
@@ -213,22 +214,6 @@ const NotificationDropdown = (props: Props) => {
             </MenuItem>
           ))}
         </ScrollWrapper>
-        <MenuItem
-          disableRipple
-          disableTouchRipple
-          sx={{
-            py: 3.5,
-            borderBottom: 0,
-            cursor: 'default',
-            userSelect: 'auto',
-            backgroundColor: 'transparent !important',
-            borderTop: theme => `1px solid ${theme.palette.divider}`
-          }}
-        >
-          <Button fullWidth variant='contained' onClick={handleDropdownClose}>
-            Read All Notifications
-          </Button>
-        </MenuItem>
       </Menu>
     </Fragment>
   )

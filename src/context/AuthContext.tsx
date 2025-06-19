@@ -1,28 +1,24 @@
-// ** React Imports
 import { createContext, useEffect, useState, ReactNode } from 'react'
-
-// ** Next Import
 import { useRouter } from 'next/router'
-
-// ** Axios
-import axios from 'axios'
-
-// ** Config
 import authConfig from 'src/configs/auth'
-
-// ** Types
-import { AuthValuesType, RegisterParams, LoginParams, ErrCallbackType, UserDataType } from './types'
+import { AuthValuesType, LoginParams, ErrCallbackType, UserDataType, Tokens } from './types'
 import { instance } from 'src/configs/axios'
 
-// ** Defaults
+const defaultTokens: Tokens = {
+  accesToken: '',
+  refreshToken: ''
+}
+
 const defaultProvider: AuthValuesType = {
+  tokens: defaultTokens,
+  loadingRefresh: false,
   user: null,
   loading: true,
   setUser: () => null,
   setLoading: () => Boolean,
   login: () => Promise.resolve(),
   logout: () => Promise.resolve(),
-  register: () => Promise.resolve()
+  refresh: () => Promise.resolve()
 }
 
 const AuthContext = createContext(defaultProvider)
@@ -32,17 +28,17 @@ type Props = {
 }
 
 const AuthProvider = ({ children }: Props) => {
-  // ** States
   const [user, setUser] = useState<UserDataType | null>(defaultProvider.user)
   const [loading, setLoading] = useState<boolean>(defaultProvider.loading)
+  const [tokens, setTokens] = useState<Tokens>(defaultTokens);
+  const [loadingRefresh, setLoadingRefresh] = useState<boolean>(defaultProvider.loadingRefresh)
 
-  // ** Hooks
   const router = useRouter()
 
   useEffect(() => {
     const initAuth = async (): Promise<void> => {
-      const storedToken = window.localStorage.getItem(authConfig.onTokenExpiration)!
-      if (storedToken) {
+      const storedToken = window.localStorage.getItem(authConfig.onTokenExpiration);
+      if (storedToken && !user) {
         setLoading(true)
         await instance
           .post('/auth/refresh-token', {
@@ -50,42 +46,41 @@ const AuthProvider = ({ children }: Props) => {
           })
           .then(async response => {
             setLoading(false)
-            setUser({ ...response.data.userData })
-            window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.access_token)
+            console.log('refresh token')
+            const rememberMe = JSON.parse(localStorage.getItem(authConfig.rememberMe) ?? 'false');
+            setTokens({ ...tokens, accesToken: response.data.access_token, refreshToken: response.data.refresh_token });
+            setUser({ ...response.data.userData, rememberMe })
             window.localStorage.setItem(authConfig.onTokenExpiration, response.data.refresh_token)
           })
           .catch(() => {
-            localStorage.removeItem('userData')
-            localStorage.removeItem('refreshToken')
-            localStorage.removeItem('accessToken')
+            console.log('falield in token')
+            localStorage.removeItem(authConfig.onTokenExpiration);
+            window.localStorage.removeItem(authConfig.rememberMe);
             setUser(null)
             setLoading(false)
-            if (authConfig.onTokenExpiration === 'logout' && !router.pathname.includes('login')) {
+            if (!router.pathname.includes('login')) {
               router.replace('/login')
             }
           })
       } else {
+        console.log('mana')
         setLoading(false)
       }
     }
-
-    initAuth()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    initAuth();
   }, [])
 
   const handleLogin = (params: LoginParams, errorCallback?: ErrCallbackType) => {
     instance
       .post('/auth', { email: params.email, password: params.password })
       .then(async response => {
-        params.rememberMe
-          ? window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.access_token)
-          : null
-        params.rememberMe
-          ? window.localStorage.setItem(authConfig.onTokenExpiration, response.data.refresh_token)
-          : null
+        if (params.rememberMe) {
+          window.localStorage.setItem(authConfig.rememberMe, JSON.stringify(params.rememberMe));
+          window.localStorage.setItem(authConfig.onTokenExpiration, response.data.refresh_token);
+        }
         const returnUrl = router.query.returnUrl
-        setUser({ ...response.data.userData })
-        params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(response.data.userData)) : null
+        setTokens({ ...tokens, accesToken: response.data.access_token, refreshToken: response.data.refresh_token });
+        setUser({ ...response.data.userData, rememberMe: params.rememberMe })
 
         const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
 
@@ -98,40 +93,54 @@ const AuthProvider = ({ children }: Props) => {
   }
 
   const handleLogout = () => {
-    const userData = JSON.parse(window.localStorage.getItem('userData') || '{}');
-    if (userData.userId) {
-      instance.delete(`/auth/logout/${userData.userId}`);
+    if (user) {
+      instance.delete(`/auth/logout/${user.userId}`);
     } else {
       console.error('No se encontró el ID de usuario en localStorage');
     }
     setUser(null)
-    window.localStorage.removeItem('userData')
-    window.localStorage.removeItem(authConfig.storageTokenKeyName)
+    setTokens(defaultTokens)
     window.localStorage.removeItem(authConfig.onTokenExpiration)
+    window.localStorage.removeItem(authConfig.rememberMe)
     router.push('/login')
   }
 
-  const handleRegister = (params: RegisterParams, errorCallback?: ErrCallbackType) => {
-    axios
-      .post(authConfig.registerEndpoint, params)
-      .then(res => {
-        if (res.data.error) {
-          if (errorCallback) errorCallback(res.data.error)
-        } else {
-          handleLogin({ email: params.email, password: params.password })
-        }
-      })
-      .catch((err: { [key: string]: string }) => (errorCallback ? errorCallback(err) : null))
-  }
+
+  const handleRefresh = async (): Promise<void> => {
+    console.log('llamadas al refresh')
+    setLoadingRefresh(true);
+    try {
+      const response = await instance
+        .post('/auth/refresh-token', {
+          token: tokens.refreshToken
+        })
+      const rememberMe = user?.rememberMe ?? JSON.parse(localStorage.getItem(authConfig.rememberMe) ?? 'false');
+      if (rememberMe) {
+        window.localStorage.setItem(authConfig.rememberMe, JSON.stringify(rememberMe));
+        window.localStorage.setItem(authConfig.onTokenExpiration, response.data.refresh_token);
+      }
+      setTokens({ ...tokens, accesToken: response.data.access_token, refreshToken: response.data.refresh_token });
+      setUser({ ...response.data.userData, rememberMe })
+      setLoadingRefresh(false);
+    } catch (e) {
+      console.error(e);
+      localStorage.removeItem(authConfig.onTokenExpiration);
+      window.localStorage.removeItem(authConfig.rememberMe);
+      setLoadingRefresh(false);
+    }
+  };
+
 
   const values = {
     user,
     loading,
+    loadingRefresh,
+    tokens,
     setUser,
     setLoading,
     login: handleLogin,
     logout: handleLogout,
-    register: handleRegister
+    refresh: handleRefresh,
   }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>
