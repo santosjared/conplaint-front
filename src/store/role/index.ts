@@ -91,15 +91,17 @@ export const roleSlice = createSlice({
         data: [],
         total: 0,
     },
-    reducers: {
-        setRoles: (state, action) => {
-            state.data = action.payload.result
-            state.total = action.payload.total
-        },
-    },
+    reducers: {},
+    extraReducers: builder => {
+        builder
+            .addCase(fetchData.fulfilled, (state, action) => {
+                state.data = action.payload.result,
+                    state.total = action.payload.total
+            })
+    }
 })
 
-export const { setRoles } = roleSlice.actions
+// export const { setRoles } = roleSlice.actions
 
 
 export default roleSlice.reducer
