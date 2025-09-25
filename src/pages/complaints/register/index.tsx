@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardContent, CardMedia, FormControl, FormHelperText, Grid, TextField, Typography } from "@mui/material"
+import { Box, Button, Card, CardContent, CardMedia, FormControl, FormHelperText, Grid, TextField, Typography, useTheme } from "@mui/material"
 import { Controller, useForm } from "react-hook-form"
 import { styled } from '@mui/material/styles'
 import { useDropzone } from 'react-dropzone'
@@ -56,6 +56,8 @@ const AddComplaints = ({ toggle, mode = 'create', defaultValues }: Props) => {
 
     const [preview, setPreview] = useState<string | null>(null)
 
+    const theme = useTheme()
+
     const dispatch = useDispatch<AppDispatch>()
 
     const {
@@ -106,7 +108,7 @@ const AddComplaints = ({ toggle, mode = 'create', defaultValues }: Props) => {
     return (
         <Box>
             <form autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
-                <fieldset style={{ border: '1.5px solid #E0E0E0', borderRadius: 10, paddingTop: 20 }}>
+                <fieldset style={{ border: `1.5px solid ${theme.palette.primary.main}`, borderRadius: 10, paddingTop: 20 }}>
                     <legend style={{ textAlign: 'center' }}><Typography variant='subtitle2'>{mode === 'create' ? 'Agregar denuncia' : 'Editar denuncia'}</Typography></legend>
                     <Grid container spacing={2}>
                         <Grid item xs={12}>
@@ -172,14 +174,14 @@ const AddComplaints = ({ toggle, mode = 'create', defaultValues }: Props) => {
                                         </Typography>
                                     </CardContent>
                                 </Card> : <Fragment><Typography variant='subtitle2'>Subir una imagen</Typography>
-                                    <Icon icon='mdi:upload-box' fontSize={40} /></Fragment>}
+                                    <Icon icon='mdi:upload-box' fontSize={40} color={theme.palette.success.main} /></Fragment>}
 
                             </DragAndDrog>
                             {errors.file && <FormHelperText sx={{ color: 'error.main' }}>{errors.file.message}</FormHelperText>}
                         </Grid>
                     </Grid>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 6 }}>
-                        <Button size='large' variant='outlined' color='secondary' onClick={handleReset} startIcon={<Icon icon='mdi:cancel-circle' />}>
+                        <Button size='large' variant='contained' color='error' onClick={handleReset} startIcon={<Icon icon='mdi:cancel-circle' />}>
                             Cancelar
                         </Button>
                         <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<Icon icon='mdi:content-save' />}>

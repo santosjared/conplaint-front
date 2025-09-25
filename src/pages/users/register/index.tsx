@@ -1,4 +1,4 @@
-import { Box, Button, FormControl, FormHelperText, Grid, IconButton, InputAdornment, OutlinedInput, TextField, Typography } from "@mui/material"
+import { Box, Button, FormControl, FormHelperText, Grid, IconButton, InputAdornment, OutlinedInput, TextField, Typography, useTheme } from "@mui/material"
 import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -37,6 +37,9 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
 
     const [showPassword, setShowPassword] = useState(false)
     const [roles, setRoles] = useState<any[]>([])
+    const checkemail = defaultValues?.email
+
+    const theme = useTheme()
 
     const schema = yup.object().shape({
         grade: yup.string().required('El campo grado es requerido'),
@@ -52,13 +55,13 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
             .notRequired(),
         firstName: yup.string().required('El campo 1er. nombre es requerido')
             .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo apellido solo debe contener letras')
-            .min(4, obj => showErrors('1er. nombre', obj.value.length, obj.min)),
+            .min(3, obj => showErrors('1er. nombre', obj.value.length, obj.min)),
         lastName: yup.string()
             .transform(value => (value === '' ? undefined : value))
-            .min(4, 'El campo 2do. nombre debe tener al menos 4 caracteres')
+            .min(3, 'El campo 2do. nombre debe tener al menos 4 caracteres')
             .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo 2do. nombre solo debe contener letras')
             .notRequired(),
-        email: yup.string().email().required('El campo correo electrónico es requerido'),
+        email: yup.string().email('Debe ingresar un correo electrónico válido').required('El campo correo electrónico es requerido'),
         ci: yup.string().required('El campo ci es requerido')
             .min(7, obj => showErrors('ci', obj.value.length, obj.min)),
         exp: yup.string().required('Seleccione la expedición del carnet'),
@@ -69,9 +72,9 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
             otherwise: (schema) => schema.notRequired(),
         }),
         phone: yup
-            .number()
-            .typeError('El celular debe ser un número')
-            .min(10, obj => showErrors('celular', obj.value.length, obj.min))
+            .string()
+            .matches(/^\d+$/, 'El celular debe contener solo números')
+            .min(6, 'El celular debe tener al menos 6 dígitos')
             .required('El campo celular es requerido'),
         address: yup
             .string()
@@ -98,8 +101,8 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
         reset,
         control,
         watch,
-        setValue,
         handleSubmit,
+        setError,
         formState: { errors }
     } = useForm({
         defaultValues,
@@ -126,30 +129,64 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
     }, [defaultValues, mode])
 
 
-    const onSubmit = (data: UserType) => {
+    const onSubmit = async (data: UserType) => {
+        try {
+            const modifiedData = {
+                ...data,
+                post: data.post === 'other' ? data.customPost : data.post,
+            };
+            delete modifiedData.customPost;
 
-        const modifiedData = {
-            ...data,
-            post: data.post === 'other' ? data.customPost : data.post,
-        };
-        delete modifiedData.customPost;
-        if (mode === 'edit' && defaultValues?._id) {
-            delete modifiedData._id;
-            delete modifiedData.__v;
-            dispatch(updateUser({ data: modifiedData, id: defaultValues._id, filtrs: { skip: page * pageSize, limit: pageSize } }))
-        } else {
-            dispatch(addUser({ data: modifiedData, filtrs: { skip: page * pageSize, limit: pageSize } }))
+            if (mode === 'edit' && defaultValues?._id) {
+                if (data.email !== checkemail) {
+                    const check = await instance.get(`/users/check-email/${data.email}`);
+                    if (check.data) {
+                        setError('email', {
+                            type: 'manual',
+                            message: 'Este correo ya está registrado'
+                        });
+                        return;
+                    }
+                }
+
+                delete modifiedData._id;
+                delete modifiedData.__v;
+
+                await dispatch(updateUser({
+                    data: modifiedData,
+                    id: defaultValues._id,
+                    filtrs: { skip: page * pageSize, limit: pageSize }
+                }));
+            }
+            else {
+                const check = await instance.get(`/users/check-email/${data.email}`);
+                if (check.data) {
+                    setError('email', {
+                        type: 'manual',
+                        message: 'Este correo ya está registrado'
+                    });
+                    return;
+                }
+
+                await dispatch(addUser({
+                    data: modifiedData,
+                    filtrs: { skip: page * pageSize, limit: pageSize }
+                }));
+            }
+        } catch (error: any) {
+            console.error('Error al guardar usuario:', error);
         }
-        toggle()
-        reset()
-    }
+        toggle();
+        reset();
+    };
+
     const handleOnclickCancel = () => {
         reset()
         toggle()
     }
     return (<Box>
         <form autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
-            <fieldset style={{ border: '1.5px solid #E0E0E0', borderRadius: 10, paddingTop: 20 }}>
+            <fieldset style={{ border: `1.5px solid ${theme.palette.primary.main}`, borderRadius: 10, paddingTop: 20 }}>
                 <legend style={{ textAlign: 'center' }}><Typography variant='subtitle2'>Agregar Nuevo Usuario</Typography></legend>
                 <Grid container spacing={2}>
                     <Grid item xs={6}>
@@ -209,7 +246,6 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                                         onChange={onChange}
                                         error={Boolean(errors.paternalSurname)}
                                         value={value}
-
                                     />
                                 )}
                             />
@@ -385,9 +421,10 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                                         <MenuItem value='OPERADOR'>OPERADOR</MenuItem>
                                         <MenuItem value='PATRULLERO'>PATRULLERO</MenuItem>
                                         <MenuItem value='CONDUCTOR'>CONDUCTOR</MenuItem>
-                                        <MenuItem value='RECEPCIONISTA'>RECEPCIONISTA</MenuItem>
                                         <MenuItem value='SECRETARIA'>SECRETARIA</MenuItem>
                                         <MenuItem value='MONITOREO DE CAMARAS'>MONITOREO DE CAMARAS</MenuItem>
+                                        <MenuItem value='DESPACHADOR'>DESPACHADOR</MenuItem>
+                                        <MenuItem value='RECEPCIONISTA'>RECEPCIONISTA</MenuItem>
                                         <MenuItem value='other'>OTRO</MenuItem>
                                     </Select>
                                 )}
@@ -531,7 +568,7 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                     </Grid>
                 </Grid>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Button size='large' variant='outlined' color='secondary' onClick={handleOnclickCancel} startIcon={<Icon icon='mdi:cancel-circle' />}>
+                    <Button size='large' variant='contained' color='error' onClick={handleOnclickCancel} startIcon={<Icon icon='mdi:cancel-circle' />}>
                         Cancelar
                     </Button>
                     <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<Icon icon='mdi:content-save' />}>

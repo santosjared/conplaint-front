@@ -13,7 +13,6 @@ import CustomChip from 'src/@core/components/mui/chip'
 import AddUser from './register'
 import { UserType } from 'src/types/types'
 import Swal from 'sweetalert2'
-import { instance } from 'src/configs/axios'
 
 interface TypeRol {
     name: string
@@ -356,16 +355,6 @@ const Users = () => {
 
     const store = useSelector((state: RootState) => state.user)
     useEffect(() => {
-        const initApi = async () => {
-            try {
-                const response = await instance.get('/users');
-                console.log(response)
-            } catch (e) {
-                console.log(e)
-            }
-
-        }
-        // initApi();
         dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
     }, [pageSize, page])
 
@@ -380,11 +369,14 @@ const Users = () => {
     const handleFilters = () => {
         dispatch(fetchData({ filter: filters, skip: page * pageSize, limit: pageSize }))
     }
+    const handleSearchAll = () => {
+        dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }));
+    }
     return (
         <Grid container spacing={6}>
             <Grid item xs={12}>
                 <Card>
-                    <CardHeader title='Registro de usuarios' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
+                    <CardHeader title='Registro de usuarios' />
                     <Box
                         sx={{
                             p: 5,
@@ -404,20 +396,24 @@ const Users = () => {
                                 value={filters}
                                 onChange={(e) => setFilters(e.target.value)}
                                 InputProps={{
-                                    startAdornment: <Icon icon="mdi:search" />,
+                                    endAdornment: <Icon icon="mdi:search" />,
                                 }}
                             />
 
                             <Button
                                 variant="outlined"
                                 onClick={handleFilters}
+                                sx={{ p: 3.5 }}
                             >
                                 Buscar
+                            </Button>
+                            <Button variant="contained" sx={{ ml: 2, p: 3.2 }} onClick={handleSearchAll}>
+                                Todos
                             </Button>
                         </Box>
 
                         <Button
-                            sx={{ mt: { xs: 2, sm: 0 } }}
+                            sx={{ mt: { xs: 2, sm: 0 }, p: 3.2 }}
                             onClick={handleCreate}
                             variant="contained"
                         >

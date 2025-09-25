@@ -1,27 +1,22 @@
-// ** React Imports
 import { useEffect } from 'react'
-
-// ** Next Imports
 import { useRouter } from 'next/router'
-
-// ** Spinner Import
 import Spinner from 'src/@core/components/spinner'
-
-import { useAuth } from 'src/hooks/useAuth'
 import navigation from 'src/navigation/vertical'
 import { buildAbilityFor } from 'src/configs/acl'
+import { useSelector } from 'react-redux'
+import { RootState } from 'src/store'
 
 const Home = () => {
-  const { user } = useAuth()
+  const { user } = useSelector((state: RootState) => state.auth);
   const router = useRouter()
   useEffect(() => {
     if (!router.isReady) {
       return
     }
 
-    if (!user?.role?.permissions) return
+    if (!user) return
 
-    const ability = buildAbilityFor(user.role.permissions)
+    const ability = buildAbilityFor(user?.rol?.permissions)
     if (!ability) return
     const navItems = navigation()
     const accessibleRoute: any = navItems.find(item => {

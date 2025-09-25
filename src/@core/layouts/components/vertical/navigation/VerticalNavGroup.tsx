@@ -80,7 +80,7 @@ const VerticalNavGroup = (props: Props) => {
   const theme = useTheme()
   const router = useRouter()
   const currentURL = router.asPath
-  const { direction, mode, navCollapsed, verticalNavToggleType } = settings
+  const { navCollapsed, verticalNavToggleType } = settings
 
   // ** Accordion menu group open toggle
   const toggleActiveGroup = (item: NavGroup, parent: NavGroup | undefined) => {
@@ -179,47 +179,22 @@ const VerticalNavGroup = (props: Props) => {
   const menuGroupCollapsedStyles = navCollapsed && !navHover ? { opacity: 0 } : { opacity: 1 }
 
   const conditionalIconColor = () => {
-    if (mode === 'semi-dark') {
-      return {
-        color: `rgba(${theme.palette.customColors.dark}, ${parent && item.children ? 0.6 : 0.87})`
-      }
-    } else
-      return {
-        color: parent && item.children ? 'text.secondary' : 'text.primary'
-      }
+    return {
+      color: parent && item.children ? 'text.secondary' : 'text.primary'
+    }
   }
 
-  const conditionalArrowIconColor = () => {
-    if (mode === 'semi-dark') {
-      return {
-        color: `rgba(${theme.palette.customColors.dark}, 0.6)`
-      }
-    } else return {}
-  }
 
   const conditionalBgColor = () => {
-    if (mode === 'semi-dark') {
-      return {
+    return {
+      '&.Mui-selected': {
+        backgroundColor: 'action.selected',
         '&:hover': {
-          backgroundColor: `rgba(${theme.palette.customColors.dark}, 0.05)`
-        },
-        '&.Mui-selected': {
-          backgroundColor: `rgba(${theme.palette.customColors.dark}, 0.08)`,
-          '&:hover': {
-            backgroundColor: `rgba(${theme.palette.customColors.dark}, 0.08)`
-          }
-        }
-      }
-    } else {
-      return {
-        '&.Mui-selected': {
-          backgroundColor: 'action.selected',
-          '&:hover': {
-            backgroundColor: 'action.selected'
-          }
+          backgroundColor: 'action.selected'
         }
       }
     }
+
   }
 
   return (
@@ -285,14 +260,7 @@ const VerticalNavGroup = (props: Props) => {
                 sx={{
                   ml: 1.5,
                   display: 'flex',
-                  alignItems: 'center',
-                  '& svg': {
-                    ...conditionalArrowIconColor(),
-                    transition: 'transform .25s ease-in-out',
-                    ...(groupActive.includes(item.title) && {
-                      transform: direction === 'ltr' ? 'rotate(90deg)' : 'rotate(-90deg)'
-                    })
-                  }
+                  alignItems: 'center'
                 }}
               >
                 {item.badgeContent ? (
@@ -303,7 +271,7 @@ const VerticalNavGroup = (props: Props) => {
                     sx={{ mr: 0.75, '& .MuiChip-label': { px: 2.5, lineHeight: 1.385, textTransform: 'capitalize' } }}
                   />
                 ) : null}
-                <Icon icon={direction === 'ltr' ? 'mdi:chevron-right' : 'mdi:chevron-left'} />
+                <Icon icon='mdi:chevron-left' />
               </Box>
             </MenuItemTextWrapper>
           </ListItemButton>

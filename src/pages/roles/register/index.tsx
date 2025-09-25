@@ -1,4 +1,4 @@
-import { Box, Button, FormControl, FormHelperText, Grid, TextField, Typography } from "@mui/material"
+import { Box, Button, FormControl, FormHelperText, Grid, TextField, Typography, useTheme } from "@mui/material"
 import { useEffect } from "react"
 import Icon from 'src/@core/components/icon'
 import * as yup from 'yup'
@@ -8,13 +8,14 @@ import { Controller, useForm } from "react-hook-form"
 import { yupResolver } from '@hookform/resolvers/yup'
 import { RolType } from "src/types/types"
 import { addRol, updateRol } from "src/store/role"
+import { Rol } from "src/context/types"
 
 interface Props {
     toggle: () => void
     page: number
     pageSize: number
     mode?: 'create' | 'edit'
-    defaultValues?: RolType
+    defaultValues?: Rol
 }
 
 const showErrors = (field: string, valueLen: number, min: number) => {
@@ -39,6 +40,8 @@ const AddRol = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Prop
             .notRequired()
     })
 
+    const theme = useTheme()
+
     const dispatch = useDispatch<AppDispatch>()
 
     const {
@@ -56,14 +59,13 @@ const AddRol = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Prop
         reset(defaultValues)
     }, [defaultValues, mode])
 
-    const onSubmit = (data: RolType) => {
+    const onSubmit = (data: Rol) => {
         if (mode === 'edit' && defaultValues?._id) {
-            delete data._id
-            delete data.__v
-            delete data.permissions
-            dispatch(updateRol({ data, id: defaultValues._id, filtrs: { skip: page * pageSize, limit: pageSize } }))
+            const { _id, __v, permissions, ...newData } = data
+            dispatch(updateRol({ data: newData, id: defaultValues._id, filtrs: { skip: page * pageSize, limit: pageSize } }))
         } else {
-            dispatch(addRol({ data, filtrs: { skip: page * pageSize, limit: pageSize } }))
+            const { _id, __v, permissions, ...newData } = data
+            dispatch(addRol({ data: newData, filtrs: { skip: page * pageSize, limit: pageSize } }))
         }
         toggle()
         reset()
@@ -77,7 +79,7 @@ const AddRol = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Prop
     return (
         <Box>
             <form autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
-                <fieldset style={{ border: '1.5px solid #E0E0E0', borderRadius: 10, paddingTop: 20 }}>
+                <fieldset style={{ border: `1.5px solid ${theme.palette.primary.main}`, borderRadius: 10, paddingTop: 20 }}>
                     <legend style={{ textAlign: 'center' }}>
                         <Typography variant='subtitle2'>Agregar Nuevo Usuario</Typography>
                     </legend>
@@ -125,8 +127,8 @@ const AddRol = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Prop
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Button
                             size='large'
-                            variant='outlined'
-                            color='secondary'
+                            variant='contained'
+                            color='error'
                             onClick={handleOnclickCancel}
                             startIcon={<Icon icon='mdi:cancel-circle' />}
                         >

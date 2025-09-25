@@ -126,7 +126,7 @@ const Options = ({ skip, limit, status, _id }: OptionsProps) => {
             cancelButtonText: 'Cancelar',
             confirmButtonColor: '#ff4040',
             confirmButtonText: 'Si',
-        }).then(async (result) => { return await result.isConfirmed });
+        }).then(async (result) => { return result.isConfirmed });
         if (confirme) {
             dispatch(refusedComplaints({ skip, limit, status, _id }))
         }
@@ -207,13 +207,18 @@ const ComplaintsClient = ({ complaints, page, pageSize, setPage, limit, status }
                             <Grid item xs={12} sm={6} lg={6} key={index}>
                                 <Card>
                                     <CardHeader
+                                        sx={{ backgroundColor: theme => theme.palette.primary.main }}
                                         avatar={
                                             <Avatar sx={{ bgcolor: 'success.main' }} aria-label="recipe">
                                                 {getInitials(complaint.userId.name, complaint.userId.lastName)}
                                             </Avatar>
                                         }
                                         action={complaint.status !== 'acepted' ? <Options skip={page} limit={limit} status={status || ''} _id={complaint._id || ''} /> : null}
-                                        title={`${complaint.userId.name} ${complaint.userId.lastName}`}
+                                        title={
+                                            <Typography variant="h6" sx={{ color: 'white' }}>
+                                                {`${complaint.userId.name} ${complaint.userId.lastName}`}
+                                            </Typography>
+                                        }
                                         subheader={<Box>
                                             <Typography variant='body1' sx={{ color: complaitStatusObject[complaint.status || ''].color }}>{complaint.userId.email} - cel.:{complaint.userId.phone}</Typography>
                                             <Typography variant='body1' sx={{ color: complaitStatusObject[complaint.status || ''].color }}>
@@ -222,7 +227,6 @@ const ComplaintsClient = ({ complaints, page, pageSize, setPage, limit, status }
                                         </Box>
                                         }
                                     />
-                                    <Divider />
                                     <CardContent>
                                         <Typography variant="h6">Tipo de denuncia</Typography>
                                         <Typography variant="body1">{complaint.complaints ? complaint.complaints.name : complaint.otherComplaints}</Typography>

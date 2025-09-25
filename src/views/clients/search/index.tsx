@@ -46,10 +46,10 @@ const SearchComplaint = ({ search }: Props) => {
                 </FormControl>
             </Grid>
             <Grid item xs={4}>
-                <Button variant="outlined" sx={{ height: 50 }} onClick={handleSearch}>
+                <Button variant="outlined" sx={{ p: 3.5 }} onClick={handleSearch}>
                     Buscar
                 </Button>
-                <Button variant="contained" sx={{ ml: 3, height: 48 }} onClick={handleSearchAll}>
+                <Button variant="contained" sx={{ ml: 3, p: 3.5 }} onClick={handleSearchAll}>
                     Todos
                 </Button>
             </Grid>

@@ -7,7 +7,7 @@ const DataGrid = (theme: Theme) => {
       styleOverrides: {
         root: {
           border: 0,
-          color: theme.palette.text.primary,
+          color: 'text.secondary',
           '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within': {
             outline: 'none'
           }
@@ -18,7 +18,8 @@ const DataGrid = (theme: Theme) => {
         },
         columnHeaders: {
           lineHeight: '24px !important',
-          backgroundColor: theme.palette.customColors.tableHeaderBg
+          color: theme.palette.primary.contrastText,
+          backgroundColor: theme.palette.primary.main
         },
         columnHeader: {
           '&:not(.MuiDataGrid-columnHeaderCheckbox)': {

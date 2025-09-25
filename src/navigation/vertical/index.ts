@@ -25,6 +25,20 @@ const navigation = (): VerticalNavItemsType => {
       icon: 'mdi:account-key',
     },
     {
+      title: 'Administración de turnos',
+      path: '/shifts',
+      subject: 'shifts',
+      action: 'read',
+      icon: 'mdi:calendar-month',
+    },
+    {
+      title: 'Administración de vehículos Patrulleros',
+      path: '/patrols',
+      subject: 'patrols',
+      action: 'read',
+      icon: 'mdi:car-police',
+    },
+    {
       title: 'Registro de denuncias',
       path: '/complaints',
       subject: 'complaints',
@@ -44,6 +58,13 @@ const navigation = (): VerticalNavItemsType => {
       subject: 'assigned',
       action: 'read',
       icon: 'mdi:account-arrow-left',
+    },
+    {
+      title: 'Atender denuncias asignadas',
+      path: '/assigned',
+      subject: 'assigned',
+      action: 'read',
+      icon: 'mdi:account-box-edit-outline',
     },
   ]
 }

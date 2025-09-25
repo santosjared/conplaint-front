@@ -1,14 +1,5 @@
 import { PaymentTypes } from './types'
 
-/**
- ** Format and return date in Humanize format
- ** Intl docs: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/format
- ** Intl Constructor: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
- * @param {String} value date to format
- * @param {Object} formatting Intl object to format with
- */
-
-// ** Checks if the passed date is today
 const isToday = (date: Date | string) => {
   const today = new Date()
 

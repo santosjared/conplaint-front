@@ -14,8 +14,6 @@ import { Settings } from 'src/@core/context/settingsContext'
 // ** Theme Config
 import themeConfig from 'src/configs/themeConfig'
 
-// ** Direction component for LTR or RTL
-import Direction from 'src/layouts/components/Direction'
 
 // ** Theme Override Imports
 import overrides from './overrides'
@@ -44,15 +42,15 @@ const ThemeComponent = (props: Props) => {
   let theme = createTheme(coreThemeConfig)
 
   // ** Deep Merge Component overrides of core and user
-  const mergeComponentOverrides = (theme: Theme, settings: Settings) =>
-    deepmerge({ ...overrides(theme, settings) }, UserThemeOptions()?.components)
+  const mergeComponentOverrides = (theme: Theme) =>
+    deepmerge({ ...overrides(theme) }, UserThemeOptions()?.components)
 
   // ** Deep Merge Typography of core and user
   const mergeTypography = (theme: Theme) => deepmerge(typography(theme), UserThemeOptions()?.typography)
 
   // ** Continue theme creation and pass merged component overrides to CreateTheme function
   theme = createTheme(theme, {
-    components: { ...mergeComponentOverrides(theme, settings) },
+    components: { ...mergeComponentOverrides(theme) },
     typography: { ...mergeTypography(theme) },
   })
 
@@ -63,11 +61,9 @@ const ThemeComponent = (props: Props) => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Direction direction={settings.direction}>
-        <CssBaseline />
-        <GlobalStyles styles={() => GlobalStyling(theme) as any} />
-        {children}
-      </Direction>
+      <CssBaseline />
+      <GlobalStyles styles={() => GlobalStyling(theme) as any} />
+      {children}
     </ThemeProvider>
   )
 }

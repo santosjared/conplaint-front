@@ -28,7 +28,7 @@ export const fetchData = createAsyncThunk('complaintsClient/fetchData', async ({
             text: 'Estamos teniendo problemas al solicitar datos. Por favor contacte al desarrollador del sistema para más asistencia.',
             icon: "error"
         });
-        return []
+        return null
     }
 })
 
@@ -58,9 +58,9 @@ export const complaintsClientSlice = createSlice({
     reducers: {},
     extraReducers: builder => {
         builder.addCase(fetchData.fulfilled, (state, action) => {
-            state.data = action.payload.data
-            state.total = action.payload.total
-            state.totalWaiting = action.payload.totalWaiting
+            state.data = action.payload?.data || []
+            state.total = action.payload?.total || 0
+            state.totalWaiting = action.payload?.totalWaiting || 0
         })
     }
 }

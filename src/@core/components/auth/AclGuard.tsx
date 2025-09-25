@@ -4,8 +4,10 @@ import type { ACLObj, AppAbility } from 'src/configs/acl'
 import { AbilityContext } from 'src/layouts/components/acl/Can'
 import { buildAbilityFor } from 'src/configs/acl'
 import NotAuthorized from 'src/pages/401'
+import Spinner from 'src/@core/components/spinner'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
-import { useAuth } from 'src/hooks/useAuth'
+import { useSelector } from 'react-redux'
+import { RootState } from 'src/store'
 
 interface AclGuardProps {
   children: ReactNode
@@ -15,15 +17,17 @@ interface AclGuardProps {
 
 const AclGuard = ({ children, guestGuard, aclAbilities }: AclGuardProps) => {
   const [ability, setAbility] = useState<AppAbility | null>(null)
-  const auth = useAuth()
+  const [loading, setLoading] = useState<boolean>(true);
+  const { user } = useSelector((state: RootState) => state.auth)
   const router = useRouter()
 
   useEffect(() => {
-    if (auth.user?.role?.permissions && !ability) {
-      const newAbility = buildAbilityFor(auth.user.role.permissions)
+    if (user?.rol.permissions && !ability) {
+      const newAbility = buildAbilityFor(user.rol.permissions)
       setAbility(newAbility)
     }
-  }, [auth.user, ability])
+    setLoading(false);
+  }, [user, ability])
 
   if (guestGuard || ['/404', '/500', '/'].includes(router.route)) {
     return <>{children}</>
@@ -34,7 +38,7 @@ const AclGuard = ({ children, guestGuard, aclAbilities }: AclGuardProps) => {
 
   return (
     <BlankLayout>
-      <NotAuthorized />
+      {loading ? <Spinner /> : <NotAuthorized />}
     </BlankLayout>
   )
 }

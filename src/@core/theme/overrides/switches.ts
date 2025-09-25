@@ -7,18 +7,27 @@ const Switch = (theme: Theme) => {
       styleOverrides: {
         root: {
           '& .MuiSwitch-track': {
-            borderRadius: theme.shape.borderRadius
+            borderRadius: theme.shape.borderRadius,
+            backgroundColor: theme.palette.grey[400],
+            transition: theme.transitions.create(['background-color'], {
+              duration: theme.transitions.duration.shortest,
+            }),
           },
 
           '& .MuiSwitch-switchBase': {
             '&:not(.Mui-checked)': {
               '& .MuiSwitch-thumb': {
-                color: theme.palette.grey[50]
-              }
-            }
+                color: theme.palette.grey[50],
+              },
+              '& + .MuiSwitch-track': {
+                backgroundColor: theme.palette.grey[600],
+              },
+            },
           },
+
           '& .Mui-disabled + .MuiSwitch-track': {
-            backgroundColor: `rgb(${theme.palette.customColors.main})`
+            backgroundColor: theme.palette.grey[500],
+            opacity: 0.5,
           }
         }
       }

@@ -1,7 +1,8 @@
 import { ReactNode, ReactElement, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from 'src/hooks/useAuth'
-import guestConfig from 'src/configs/auth'
+import { useSelector } from 'react-redux'
+import { RootState } from 'src/store'
 
 interface GuestGuardProps {
   children: ReactNode
@@ -10,7 +11,8 @@ interface GuestGuardProps {
 
 const GuestGuard = (props: GuestGuardProps) => {
   const { children, fallback } = props
-  const auth = useAuth()
+  const { loading } = useAuth()
+  const { user } = useSelector((state: RootState) => state.auth);
   const router = useRouter()
 
   useEffect(() => {
@@ -18,14 +20,13 @@ const GuestGuard = (props: GuestGuardProps) => {
       return
     }
 
-    if (window.localStorage.getItem(guestConfig.onTokenExpiration)) {
+    if (user) {
       router.replace('/')
     }
 
   }, [router.route])
 
-  console.log(auth)
-  if (auth.loading || (!auth.loading && auth.user !== null)) {
+  if (loading || (!loading && user)) {
     return fallback
   }
 

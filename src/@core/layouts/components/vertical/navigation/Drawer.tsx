@@ -1,8 +1,5 @@
-// ** MUI Imports
 import { styled, useTheme } from '@mui/material/styles'
 import MuiSwipeableDrawer, { SwipeableDrawerProps } from '@mui/material/SwipeableDrawer'
-
-// ** Type Import
 import { LayoutProps } from 'src/@core/layouts/types'
 
 interface Props {
@@ -21,6 +18,7 @@ interface Props {
 
 const SwipeableDrawer = styled(MuiSwipeableDrawer)<SwipeableDrawerProps>({
   overflowX: 'hidden',
+  color: 'white',
   transition: 'width .25s ease-in-out',
   '& ul': {
     listStyle: 'none'
@@ -38,7 +36,6 @@ const SwipeableDrawer = styled(MuiSwipeableDrawer)<SwipeableDrawerProps>({
 })
 
 const Drawer = (props: Props) => {
-  // ** Props
   const {
     hidden,
     children,
@@ -53,45 +50,34 @@ const Drawer = (props: Props) => {
     navigationBorderWidth
   } = props
 
-  // ** Hook
   const theme = useTheme()
 
-  // ** Vars
-  const { mode, navCollapsed } = settings
+  const { navCollapsed } = settings
 
   let flag = true
 
   const drawerColors = () => {
-    if (mode === 'semi-dark') {
-      return {
-        backgroundColor: 'customColors.darkBg',
-        '& .MuiTypography-root': {
-          color: `rgba(${theme.palette.customColors.dark}, 0.87)`
-        }
+    return {
+      backgroundColor: 'primary.main',
+      '& .MuiTypography-root': {
+        color: theme.palette.customColors.dark
       }
-    } else
-      return {
-        backgroundColor: 'background.default'
-      }
+    }
   }
-
-  // Drawer Props for Mobile & Tablet screens
   const MobileDrawerProps = {
     open: navVisible,
     onOpen: () => setNavVisible(true),
     onClose: () => setNavVisible(false),
     ModalProps: {
-      keepMounted: true // Better open performance on mobile.
+      keepMounted: true
     }
   }
 
-  // Drawer Props for Laptop & Desktop screens
   const DesktopDrawerProps = {
     open: true,
     onOpen: () => null,
     onClose: () => null,
     onMouseEnter: () => {
-      // Declared flag to resolve first time flicker issue while trying to collapse the menu
       if (flag || navCollapsed) {
         setNavHover(true)
         flag = false
@@ -126,7 +112,7 @@ const Drawer = (props: Props) => {
           ...drawerColors(),
           width: navCollapsed && !navHover ? collapsedNavWidth : navWidth,
           ...(!hidden && navCollapsed && navHover ? { boxShadow: 10 } : {}),
-          borderRight: navigationBorderWidth === 0 ? 0 : `${navigationBorderWidth}px solid ${theme.palette.divider}`,
+          borderRight: `${navigationBorderWidth}px solid ${theme.palette.divider}`,
           ...userNavMenuPaperStyle
         },
         ...navMenuProps?.PaperProps

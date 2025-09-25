@@ -1,13 +1,17 @@
-import { Card, CardContent, CardHeader, Grid } from "@mui/material";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { Badge, Box, Card, Grid, Tab } from "@mui/material";
+import { SyntheticEvent, useEffect, useState } from "react";
+import TabContext from '@mui/lab/TabContext';
+import TabList from '@mui/lab/TabList'
+import TabPanel from '@mui/lab/TabPanel'
+import { useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "src/store";
+import { useSelector } from "react-redux";
+import { fetchData } from "src/store/clients/complaints";
 import ComplaintsClient from "src/views/clients/complints";
 import SearchComplaint from "src/views/clients/search";
 import { io } from 'socket.io-client'
 import environment from 'src/configs/environment'
-import { fetchData } from "src/store/clients/complaints";
-
+import Swal from 'sweetalert2';
 
 interface SearchFilter {
     name: string,
@@ -16,8 +20,11 @@ interface SearchFilter {
 
 const socket = io(environment().backendURI)
 
-const Received = () => {
+const Recibidos = () => {
+
+    const [activeTab, setActiveTab] = useState<string>('all')
     const [page, setPage] = useState<number>(1)
+    const [filters, setFilters] = useState<SearchFilter>({ name: '', date: '' })
 
     const limit = 5
 
@@ -25,40 +32,67 @@ const Received = () => {
 
     const store = useSelector((state: RootState) => state.complaintsClient)
 
-    const [filters, setFilters] = useState<SearchFilter>({ name: '', date: '' })
-
     useEffect(() => {
-        dispatch(fetchData({ ...filters, status: 'waiting', skip: (page - 1) * limit, limit }))
-    }, [page, filters])
+        dispatch(fetchData({ ...filters, status: activeTab === 'all' ? '' : activeTab, skip: (page - 1) * limit, limit }))
+    }, [activeTab, page, filters])
 
     socket.on('notification', (data) => {
-        dispatch(fetchData({ ...filters, status: 'waiting', skip: (page - 1) * limit, limit }))
-        console.log('notoficacion ejecutada')
+        dispatch(fetchData({ ...filters, status: activeTab === 'all' ? '' : activeTab, skip: (page - 1) * limit, limit }))
     })
 
+    const handleChange = (event: SyntheticEvent, value: string) => {
+        setActiveTab(value)
+        setPage(1)
+    }
     const search = (data: SearchFilter) => {
         setPage(1)
         setFilters(data)
     }
 
-    return (<Grid container spacing={4}>
-        <Grid item xs={12}>
-            <Card>
-                <CardHeader title='Denuncias recibidas' />
-                <CardContent>
-                    <SearchComplaint search={search} />
-                    <ComplaintsClient complaints={store.data} page={page} limit={limit} status='waiting' pageSize={Math.ceil(store.total / limit)} setPage={setPage} />
-                </CardContent>
-            </Card>
+    return (
+        <Grid container spacing={4}>
+            <Grid item xs={12}>
+                <Card>
+                    <TabContext value={activeTab}>
+                        <Box sx={{ borderBottom: 1, borderColor: 'divider', backgroundColor: theme => theme.palette.primary.main }}>
+                            <TabList onChange={handleChange} >
+                                <Tab label="Todos" value="all" sx={{ color: 'white' }} />
+                                <Tab label="Denuncias atendidas" value="acepted" sx={{ color: 'white' }} />
+                                <Tab label={store.totalWaiting > 0 ? <Badge badgeContent={store.totalWaiting} color="error">
+                                    Denuncias en espera
+                                </Badge> : 'Denuncias en espera'
+                                } value="waiting" sx={{ color: 'white' }} />
+                                <Tab label="Denuncias rechazadas" value="refused" sx={{ color: 'white' }} />
+                            </TabList>
+                        </Box>
+                        <TabPanel value="all">
+                            <SearchComplaint search={search} />
+                            <ComplaintsClient complaints={store.data} page={page} limit={limit} status='' pageSize={Math.ceil(store.total / limit)} setPage={setPage} />
+                        </TabPanel>
+                        <TabPanel value="acepted">
+                            <SearchComplaint search={search} />
+                            <ComplaintsClient complaints={store.data} page={page} limit={limit} pageSize={Math.ceil(store.total / limit)} setPage={setPage} />
+                        </TabPanel>
+                        <TabPanel value="waiting">
+                            <SearchComplaint search={search} />
+                            <ComplaintsClient complaints={store.data} page={page} limit={limit} status="waiting" pageSize={Math.ceil(store.total / limit)} setPage={setPage} />
+                        </TabPanel>
+                        <TabPanel value="refused">
+                            <SearchComplaint search={search} />
+                            <ComplaintsClient complaints={store.data} page={page} limit={limit} status="refused" pageSize={Math.ceil(store.total / limit)} setPage={setPage} />
+                        </TabPanel>
+                    </TabContext>
+                </Card>
+            </Grid>
         </Grid>
-    </Grid>)
-}
 
-Received.acl = {
+    );
+}
+Recibidos.acl = {
     action: 'read',
-    subject: 'received'
+    subject: 'dashboard'
 }
 
-Received.authGuard = true;
+Recibidos.authGuard = true;
 
-export default Received;
+export default Recibidos

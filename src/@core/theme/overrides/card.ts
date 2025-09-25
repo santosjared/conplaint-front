@@ -1,15 +1,12 @@
-// ** MUI Imports
+
 import { Theme } from '@mui/material/styles'
 
-// ** Theme Type Import
-import { Skin } from 'src/@core/layouts/types'
-
-const Card = (theme: Theme, skin: Skin) => {
+const Card = (theme: Theme) => {
   return {
     MuiCard: {
       styleOverrides: {
         root: {
-          ...(skin === 'bordered' && { border: `1px solid ${theme.palette.divider}` }),
+          border: `1px solid ${theme.palette.divider}`,
           '& .card-more-options': {
             marginTop: theme.spacing(-1),
             marginRight: theme.spacing(-3)
@@ -20,15 +17,19 @@ const Card = (theme: Theme, skin: Skin) => {
         }
       },
       defaultProps: {
-        elevation: skin === 'bordered' ? 0 : 6
+        elevation: 6
       }
     },
     MuiCardHeader: {
       styleOverrides: {
         root: {
           padding: theme.spacing(5),
+          backgroundColor: theme.palette.primary.main,
           '& + .MuiCardContent-root, & + .MuiCardActions-root, & + .MuiCollapse-root .MuiCardContent-root': {
             paddingTop: 0
+          },
+          '& .MuiTypography-root': {
+            color: theme.palette.primary.contrastText
           },
           '& .MuiCardHeader-subheader': {
             fontSize: '0.875rem',

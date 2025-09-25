@@ -96,13 +96,15 @@ export const deleteComplaints = createAsyncThunk('complaints/deleteComplaints', 
 export const complaintSlice = createSlice({
     name: 'complaint',
     initialState: {
-        data: []
+        data: [],
+        total: 0
     },
     reducers: {},
     extraReducers: builder => {
         builder
             .addCase(fetchData.fulfilled, (state, action) => {
-                state.data = action.payload
+                state.data = action.payload.result
+                state.total = action.payload.total
             })
     }
 })

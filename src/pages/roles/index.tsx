@@ -7,20 +7,22 @@ import AddDraw from 'src/components/draw';
 import { AppDispatch, RootState } from 'src/store';
 import { deleteRol, fetchData } from 'src/store/role';
 import AddRol from './register';
-import { RolType } from 'src/types/types';
 import Swal from 'sweetalert2';
 import Permissions from './permissions';
-import { useApi } from 'src/hooks/useApi';
+import { Rol } from 'src/context/types';
 
 interface CellType {
-    row: RolType
+    row: Rol
 }
 
 
 
-const defaultValues: RolType = {
+const defaultValues: Rol = {
     name: '',
-    description: ''
+    description: '',
+    permissions: [],
+    _id: '',
+    __v: ''
 }
 
 const Roles = () => {
@@ -30,10 +32,10 @@ const Roles = () => {
     const [page, setPage] = useState<number>(0)
     const [filters, setFilters] = useState<string>('')
     const [mode, setMode] = useState<'create' | 'edit'>('create')
-    const [rolData, setRolData] = useState<RolType>(defaultValues)
+    const [rolData, setRolData] = useState<Rol>(defaultValues)
     const [openPermissons, setOpenPermissions] = useState<boolean>(false)
 
-    const RowOptions = ({ rol }: { rol: RolType }) => {
+    const RowOptions = ({ rol }: { rol: Rol }) => {
 
         const dispatch = useDispatch<AppDispatch>()
         const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -145,16 +147,9 @@ const Roles = () => {
         }
     ]
 
-    const api = useApi()
     const dispatch = useDispatch<AppDispatch>()
     const store = useSelector((state: RootState) => state.rol)
     useEffect(() => {
-        const initApi = async () => {
-            const response = await api.get('/roles', { filter: '', skip: page * pageSize, limit: pageSize });
-            console.log(response);
-            // dispatch(setRoles(response))
-        }
-        // initApi();
         dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
     }, [pageSize, page])
 
@@ -171,12 +166,15 @@ const Roles = () => {
     const handleFilters = () => {
         dispatch(fetchData({ filter: filters, skip: page * pageSize, limit: pageSize }))
     }
+    const handleSearchAll = () => {
+        dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
+    }
 
     return (
         <Grid container spacing={6}>
             <Grid item xs={12}>
                 <Card>
-                    <CardHeader title='Registro de roles y permisos' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
+                    <CardHeader title='Registro de roles y permisos' />
                     <Box
                         sx={{
                             p: 5,
@@ -196,20 +194,24 @@ const Roles = () => {
                                 value={filters}
                                 onChange={(e) => setFilters(e.target.value)}
                                 InputProps={{
-                                    startAdornment: <Icon icon="mdi:search" />,
+                                    endAdornment: <Icon icon="mdi:search" />,
                                 }}
                             />
 
                             <Button
                                 variant="outlined"
                                 onClick={handleFilters}
+                                sx={{ p: 3.5 }}
                             >
                                 Buscar
+                            </Button>
+                            <Button variant="contained" sx={{ ml: 2, p: 3.2 }} onClick={handleSearchAll}>
+                                Todos
                             </Button>
                         </Box>
 
                         <Button
-                            sx={{ mt: { xs: 2, sm: 0 } }}
+                            sx={{ mt: { xs: 2, sm: 0 }, p: 3.5 }}
                             onClick={handleCreate}
                             variant="contained"
                         >
@@ -249,7 +251,7 @@ const Roles = () => {
                     mode={mode}
                 />
             </AddDraw>
-            <Permissions open={openPermissons} toggle={togglePermissions} rol={rolData} />
+            <Permissions open={openPermissons} toggle={togglePermissions} rol={rolData} page={page} pageSize={pageSize} />
         </Grid>
     )
 }

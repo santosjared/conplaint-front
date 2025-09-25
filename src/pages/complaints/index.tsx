@@ -1,5 +1,5 @@
-import { Box, Button, Card, CardContent, CardHeader, CardMedia, Divider, Grid, IconButton, Menu, MenuItem, TextField, Typography } from "@mui/material";
-import { useEffect, useState, MouseEvent } from "react";
+import { Box, Button, Card, CardContent, CardHeader, CardMedia, Divider, Grid, IconButton, Menu, MenuItem, Pagination, TextField, Typography, useTheme } from "@mui/material";
+import { useEffect, useState, MouseEvent, Fragment } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import Icon from "src/@core/components/icon";
@@ -31,9 +31,12 @@ interface props {
 
 const Options = ({ complaint, setValue, toggle, setMode }: props) => {
 
-    const dispatch = useDispatch<AppDispatch>()
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
     const rowOptionsOpen = Boolean(anchorEl)
+
+    const dispatch = useDispatch<AppDispatch>()
+
+    const theme = useTheme()
 
     const handleRowOptionsClick = (event: MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget)
@@ -64,9 +67,9 @@ const Options = ({ complaint, setValue, toggle, setMode }: props) => {
     }
 
     return (
-        <>
+        <Fragment>
             <IconButton size='small' onClick={handleRowOptionsClick}>
-                <Icon icon='mdi:dots-vertical' />
+                <Icon icon='mdi:dots-vertical' color={theme.palette.primary.contrastText} />
             </IconButton>
             <Menu
                 keepMounted
@@ -92,28 +95,33 @@ const Options = ({ complaint, setValue, toggle, setMode }: props) => {
                     Eliminar
                 </MenuItem>
             </Menu>
-        </>
+        </Fragment>
     )
 }
 
 
 const Complaints = () => {
-    const [filters, setFilters] = useState<string>('')
+    const [name, setName] = useState<string>('')
     const [mode, setMode] = useState<'create' | 'edit'>('create')
     const [drawOpen, setDrawOpen] = useState<boolean>(false)
     const [complaintData, setComplaintData] = useState<ComplaintsModel>(defaultValues)
+    const [page, setPage] = useState<number>(1)
+    const limit = 6;
 
     const dispatch = useDispatch<AppDispatch>()
     const store = useSelector((state: RootState) => state.complaints)
 
     useEffect(() => {
-        dispatch(fetchData({ filter: '' }))
-    }, [])
+        dispatch(fetchData({ skip: (page - 1) * limit, limit }))
+    }, [page])
 
     const toggleDrawer = () => setDrawOpen(!drawOpen)
 
     const handleFilters = () => {
-        dispatch(fetchData({ filter: filters }))
+        dispatch(fetchData({ name, skip: (page - 1) * limit, limit }))
+    }
+    const handleSearchAll = () => {
+        dispatch(fetchData({ skip: (page - 1) * limit, limit }))
     }
     const handleCreate = () => {
         setMode('create')
@@ -121,82 +129,87 @@ const Complaints = () => {
         toggleDrawer()
     }
     return (
-        <Grid container spacing={3}>
-            <Grid item xs={12}>
-                <Box sx={{
+        <Card>
+            <CardHeader title='Lista de denuncias' />
+            <Box
+                sx={{
                     p: 5,
                     pb: 3,
-                    pt: 0
-                }}><Typography variant="h4">Lista de denuncias</Typography></Box>
-                <Box
-                    sx={{
-                        p: 5,
-                        pb: 3,
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                    }}
-                >
-                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <TextField
-                            label="Buscar"
-                            variant="outlined"
-                            name="search"
-                            autoComplete="off"
-                            value={filters}
-                            onChange={(e) => setFilters(e.target.value)}
-                            InputProps={{
-                                startAdornment: <Icon icon="mdi:search" />,
-                            }}
-                        />
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                }}
+            >
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <TextField
+                        label="Buscar"
+                        variant="outlined"
+                        name="search"
+                        autoComplete="off"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        InputProps={{
+                            endAdornment: <Icon icon="mdi:search" />,
+                        }}
+                    />
 
-                        <Button
-                            variant="outlined"
-                            onClick={handleFilters}
-                        >
-                            Buscar
-                        </Button>
-                    </Box>
                     <Button
-                        sx={{ mt: { xs: 2, sm: 0 } }}
-                        onClick={handleCreate}
-                        variant="contained"
+                        variant="outlined"
+                        onClick={handleFilters}
+                        sx={{ p: 3.5 }}
                     >
-                        Nuevo denuncia
+                        Buscar
+                    </Button>
+                    <Button variant="contained" sx={{ ml: 2, p: 3.2 }} onClick={handleSearchAll}>
+                        Todos
                     </Button>
                 </Box>
-            </Grid>
-            {store.data.map((complient: ComplaintsModel) => (
-                <Grid item xs={12} sm={4} lg={4} key={complient._id} >
-                    <Card>
-                        <CardHeader
-                            action={
-                                <Options complaint={complient} setValue={setComplaintData} toggle={toggleDrawer} setMode={setMode} />
-                            }
-                            title={complient.name}
-                        />
-                        <CardMedia
-                            component="img"
-                            height="194"
-                            image={`${getConfig().backendURI}/images/${complient.image}`}
-                            alt="img"
-                        />
-                        <CardContent>
-                            <Typography sx={{ fontSize: 14, fontWeight: 'bold' }}>Descripción:</Typography>
-                            <Typography variant="body1">{complient.description}</Typography>
-                        </CardContent>
-                    </Card>
+                <Button
+                    sx={{ mt: { xs: 2, sm: 0 }, p: 3.5 }}
+                    onClick={handleCreate}
+                    variant="contained"
+                >
+                    Nuevo denuncia
+                </Button>
+            </Box>
+            <Grid container spacing={3}>
+                {store.data.map((complient: ComplaintsModel) => (
+                    <Grid item xs={12} sm={4} lg={4} key={complient._id} >
+                        <Card>
+                            <CardHeader
+                                action={
+                                    <Options complaint={complient} setValue={setComplaintData} toggle={toggleDrawer} setMode={setMode} />
+                                }
+                                title={complient.name}
+                            />
+                            <CardMedia
+                                component="img"
+                                height="194"
+                                image={`${getConfig().backendURI}/images/${complient.image}`}
+                                alt="img"
+                            />
+                            <CardContent>
+                                <Typography sx={{ fontSize: 14, fontWeight: 'bold' }}>Descripción:</Typography>
+                                <Typography variant="body1">{complient.description}</Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                ))}
+                <Grid item xs={12}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', pb: 3, pt: 3 }}>
+                        <Pagination count={Math.ceil(store.total / limit)} page={page} onChange={(envet, value) => { setPage(value) }} color="primary" />
+                    </Box>
                 </Grid>
-            ))}
-            <AddDraw open={drawOpen} toggle={toggleDrawer} title={mode === 'create' ? 'Registro de la denuncia' : 'Editar denuncia'}>
-                <AddComplaints
-                    toggle={toggleDrawer}
-                    defaultValues={complaintData}
-                    mode={mode}
-                />
-            </AddDraw>
-        </Grid>
+                <AddDraw open={drawOpen} toggle={toggleDrawer} title={mode === 'create' ? 'Registro de la denuncia' : 'Editar denuncia'}>
+                    <AddComplaints
+                        toggle={toggleDrawer}
+                        defaultValues={complaintData}
+                        mode={mode}
+                    />
+                </AddDraw>
+            </Grid>
+        </Card>
     );
 }
 Complaints.acl = {

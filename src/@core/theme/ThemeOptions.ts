@@ -16,7 +16,7 @@ import breakpoints from './breakpoints'
 
 const themeOptions = (settings: Settings): ThemeOptions => {
   // ** Vars
-  const { skin, mode, direction, themeColor } = settings
+  const { mode, themeColor } = settings
 
   // ** Create New object before removing user component overrides and typography objects from userThemeOptions
   const userThemeConfig: any = Object.assign({}, UserThemeOptions())
@@ -29,8 +29,7 @@ const themeOptions = (settings: Settings): ThemeOptions => {
 
   const mergedThemeConfig = deepmerge(
     {
-      direction,
-      palette: palette(mode === 'semi-dark' ? 'light' : mode, skin),
+      palette: palette(mode),
       typography: {
         fontFamily:
           userFontFamily ||

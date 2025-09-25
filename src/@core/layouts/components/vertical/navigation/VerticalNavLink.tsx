@@ -1,11 +1,6 @@
-// ** React Imports
 import { ElementType } from 'react'
-
-// ** Next Imports
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-
-// ** MUI Imports
 import Chip from '@mui/material/Chip'
 import ListItem from '@mui/material/ListItem'
 import Typography from '@mui/material/Typography'
@@ -13,20 +8,12 @@ import Box, { BoxProps } from '@mui/material/Box'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import { styled, useTheme } from '@mui/material/styles'
 import ListItemButton, { ListItemButtonProps } from '@mui/material/ListItemButton'
-
-// ** Configs Import
 import themeConfig from 'src/configs/themeConfig'
-
-// ** Types
 import { NavLink, NavGroup } from 'src/@core/layouts/types'
 import { Settings } from 'src/@core/context/settingsContext'
-
-// ** Custom Components Imports
 import UserIcon from 'src/layouts/components/UserIcon'
 import Translations from 'src/layouts/components/Translations'
 import CanViewNavLink from 'src/layouts/components/acl/CanViewNavLink'
-
-// ** Util Import
 import { handleURLQueries } from 'src/@core/layouts/utils'
 
 interface Props {
@@ -41,7 +28,6 @@ interface Props {
   isSubToSub?: NavGroup | undefined
 }
 
-// ** Styled Components
 const MenuNavLink = styled(ListItemButton)<
   ListItemButtonProps & { component?: ElementType; href: string; target?: '_blank' | undefined }
 >(({ theme }) => ({
@@ -85,35 +71,21 @@ const VerticalNavLink = ({
   toggleNavVisibility,
   navigationBorderWidth
 }: Props) => {
-  // ** Hooks
+
   const theme = useTheme()
   const router = useRouter()
 
-  // ** Vars
-  const { mode, navCollapsed } = settings
+  const { navCollapsed } = settings
 
   const icon = parent && !item.icon ? themeConfig.navSubItemIcon : item.icon
 
   const conditionalIconColor = () => {
-    if (mode === 'semi-dark') {
-      return {
-        color: `rgba(${theme.palette.customColors.dark}, ${parent ? 0.6 : 0.87})`
-      }
-    } else
-      return {
-        color: parent ? 'text.secondary' : 'text.primary'
-      }
+    return {
+      color: theme.palette.customColors.dark
+    }
   }
 
-  const conditionalBgColor = () => {
-    if (mode === 'semi-dark') {
-      return {
-        '&:hover': {
-          backgroundColor: `rgba(${theme.palette.customColors.dark}, 0.05)`
-        }
-      }
-    } else return {}
-  }
+
 
   const isNavLinkActive = () => {
     if (router.pathname === item.path || handleURLQueries(router, item.path)) {
@@ -152,7 +124,6 @@ const VerticalNavLink = ({
           }}
           sx={{
             py: 2.25,
-            ...conditionalBgColor(),
             ...(item.disabled ? { pointerEvents: 'none' } : { cursor: 'pointer' }),
             pr: navCollapsed && !navHover ? (collapsedNavWidth - navigationBorderWidth - 24 - 16) / 8 : 3,
             pl: navCollapsed && !navHover ? (collapsedNavWidth - navigationBorderWidth - 24 - 16) / 8 : 4

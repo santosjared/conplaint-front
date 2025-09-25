@@ -68,7 +68,7 @@ const input = (theme: Theme) => {
           }
         }
       }
-    }
+    },
   }
 }
 

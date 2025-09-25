@@ -1,15 +1,20 @@
 import { configureStore } from '@reduxjs/toolkit';
 import user from './user';
-import rol from './role'
-import complaints from './complaints'
-import complaintsClient from './clients/complaints'
+import rol from './role';
+import complaints from './complaints';
+import complaintsClient from './clients/complaints';
+import auth from './auth';
+import shits from './shits';
 
 export const store = configureStore({
     reducer: {
         user,
         rol,
         complaints,
-        complaintsClient
+        complaintsClient,
+        auth,
+        shits
+
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({
@@ -19,3 +24,4 @@ export const store = configureStore({
 
 export type AppDispatch = typeof store.dispatch
 export type RootState = ReturnType<typeof store.getState>
+export default store

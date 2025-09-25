@@ -5,23 +5,13 @@ import { Theme, SxProps, PaletteMode } from '@mui/material'
 import { Settings } from 'src/@core/context/settingsContext'
 import { SwipeableDrawerProps } from '@mui/material/SwipeableDrawer'
 
-export type Layout = 'vertical' | 'horizontal' | 'blank' | 'blankWithAppBar'
+export type Layout = 'vertical' | 'blank' | 'blankWithAppBar'
 
-export type Skin = 'default' | 'bordered'
-
-export type Mode = PaletteMode | 'semi-dark'
-
-export type ContentWidth = 'full' | 'boxed'
-
-export type AppBar = 'fixed' | 'static' | 'hidden'
-
-export type Footer = 'fixed' | 'static' | 'hidden'
+export type Mode = PaletteMode
 
 export type ThemeColor = 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success'
 
 export type VerticalNavToggle = 'accordion' | 'collapse'
-
-export type HorizontalMenuToggle = 'hover' | 'click'
 
 export type BlankLayoutProps = {
   children: ReactNode
@@ -34,12 +24,14 @@ export type BlankLayoutWithAppBarProps = {
 export type NavSectionTitle = {
   action?: string
   subject?: string
+  path?: string
   sectionTitle: string
 }
 
 export type NavGroup = {
   icon?: string
   title: string
+  path?: string
   action?: string
   subject?: string
   badgeContent?: string

@@ -1,23 +1,21 @@
-import { Badge, Box, Card, Grid, Tab } from "@mui/material";
+import { Box, Card, Grid, Tooltip, Typography } from "@mui/material";
 import { SyntheticEvent, useEffect, useState } from "react";
-import TabContext from '@mui/lab/TabContext';
-import TabList from '@mui/lab/TabList'
-import TabPanel from '@mui/lab/TabPanel'
 import { useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "src/store";
 import { useSelector } from "react-redux";
 import { fetchData } from "src/store/clients/complaints";
-import ComplaintsClient from "src/views/clients/complints";
-import SearchComplaint from "src/views/clients/search";
 import { io } from 'socket.io-client'
 import environment from 'src/configs/environment'
-import { useApi } from "src/hooks/useApi";
-import Swal from 'sweetalert2';
+import { ApexOptions } from "apexcharts";
+import GraficaDenuncias from "./grafica-denuncias";
+import CrmMonthlyBudget from "./grafica-fecha";
+import CrmTotalGrowth from "./torta-denucias";
 
 interface SearchFilter {
     name: string,
     date: string
 }
+
 
 const socket = io(environment().backendURI)
 
@@ -33,31 +31,7 @@ const Dashboard = () => {
 
     const store = useSelector((state: RootState) => state.complaintsClient)
 
-    const api = useApi();
-
-
     useEffect(() => {
-        const fecth = async () => {
-            try {
-                const response = await api.get('/complaints-client/complaints-with-status',
-                    { params: { ...filters, status: activeTab === 'all' ? '' : activeTab, skip: (page - 1) * limit, limit } })
-                // dispatch(setData(response))
-            } catch (error: any) {
-                let message = 'Estamos teniendo problemas al solicitar datos. Por favor contacte al desarrollador del sistema para más asistencia.';
-                if (error.response?.status === 401) {
-                    message = 'No tienes autorización para solicitar denuncias, solicite autorización al administador del sistema';
-                }
-                if (error.response?.status === 404) {
-                    message = "No podemos encontrar las denuncias error 404. Por favor contacte al desarrollador del sistema para más asistencia."
-                }
-                Swal.fire({
-                    title: '¡Error!',
-                    text: message,
-                    icon: "error"
-                });
-            }
-        }
-        // fecth();
         dispatch(fetchData({ ...filters, status: activeTab === 'all' ? '' : activeTab, skip: (page - 1) * limit, limit }))
     }, [activeTab, page, filters])
 
@@ -77,37 +51,152 @@ const Dashboard = () => {
     return (
         <Grid container spacing={4}>
             <Grid item xs={12}>
+                <Typography variant="h6">Denuncias para hoy</Typography>
+            </Grid>
+            <Grid item xs={3}>
                 <Card>
-                    <TabContext value={activeTab}>
-                        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                            <TabList onChange={handleChange}>
-                                <Tab label="Todos" value="all" />
-                                <Tab label="Denuncias atendidas" value="acepted" />
-                                <Tab label={store.totalWaiting > 0 ? <Badge badgeContent={store.totalWaiting} color="error">
-                                    Denuncias en espera
-                                </Badge> : 'Denuncias en espera'
-                                } value="waiting" />
-                                <Tab label="Denuncias rechazadas" value="refused" />
-                            </TabList>
-                        </Box>
-                        <TabPanel value="all">
-                            <SearchComplaint search={search} />
-                            <ComplaintsClient complaints={store.data} page={page} limit={limit} status='' pageSize={Math.ceil(store.total / limit)} setPage={setPage} />
-                        </TabPanel>
-                        <TabPanel value="acepted">
-                            <SearchComplaint search={search} />
-                            <ComplaintsClient complaints={store.data} page={page} limit={limit} pageSize={Math.ceil(store.total / limit)} setPage={setPage} />
-                        </TabPanel>
-                        <TabPanel value="waiting">
-                            <SearchComplaint search={search} />
-                            <ComplaintsClient complaints={store.data} page={page} limit={limit} status="waiting" pageSize={Math.ceil(store.total / limit)} setPage={setPage} />
-                        </TabPanel>
-                        <TabPanel value="refused">
-                            <SearchComplaint search={search} />
-                            <ComplaintsClient complaints={store.data} page={page} limit={limit} status="refused" pageSize={Math.ceil(store.total / limit)} setPage={setPage} />
-                        </TabPanel>
-                    </TabContext>
+                    <Box sx={{ p: 2, backgroundColor: theme => theme.palette.primary.main }}>
+                        <Tooltip title="Total de denuncias atendidas" arrow>
+                            <Typography
+                                variant="subtitle2"
+                                noWrap
+                                sx={{
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    color: 'white',
+                                    mb: 2,
+                                }}
+                            >
+                                Total de denuncias atendidas
+                            </Typography>
+                        </Tooltip>
+                    </Box>
+                    <Box
+                        sx={{
+                            backgroundColor: theme => theme.palette.success.main,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: 50,
+                        }}
+                    >
+                        <Typography variant="h6" color="white">
+                            78
+                        </Typography>
+                    </Box>
                 </Card>
+            </Grid>
+            <Grid item xs={3}>
+                <Card>
+                    <Box sx={{ p: 2, backgroundColor: theme => theme.palette.primary.main }}>
+                        <Tooltip title="Total de denuncias recibidos" arrow>
+                            <Typography
+                                variant="subtitle2"
+                                noWrap
+                                sx={{
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    color: 'white',
+                                    mb: 2,
+                                }}
+                            >
+                                Total de denuncias recibidos
+                            </Typography>
+                        </Tooltip>
+                    </Box>
+                    <Box
+                        sx={{
+                            backgroundColor: theme => theme.palette.info.main,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: 50,
+                        }}
+                    >
+                        <Typography variant="h6" color="white">
+                            78
+                        </Typography>
+                    </Box>
+                </Card>
+            </Grid>
+            <Grid item xs={3}>
+                <Card>
+                    <Box sx={{ p: 2, backgroundColor: theme => theme.palette.primary.main }}>
+                        <Tooltip title="Total de denuncias sin atender" arrow>
+                            <Typography
+                                variant="subtitle2"
+                                noWrap
+                                sx={{
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    color: 'white',
+                                    mb: 2,
+                                }}
+                            >
+                                Total de denuncias sin atender
+                            </Typography>
+                        </Tooltip>
+                    </Box>
+                    <Box
+                        sx={{
+                            backgroundColor: theme => theme.palette.warning.main,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: 50,
+                        }}
+                    >
+                        <Typography variant="h6" color="white">
+                            78
+                        </Typography>
+                    </Box>
+                </Card>
+            </Grid>
+            <Grid item xs={3}>
+                <Card>
+                    <Box sx={{ p: 2, backgroundColor: theme => theme.palette.primary.main }}>
+                        <Tooltip title="Total de denuncias rechazadas" arrow>
+                            <Typography
+                                variant="subtitle2"
+                                noWrap
+                                sx={{
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    color: 'white',
+                                    mb: 2,
+                                }}
+                            >
+                                Total de denuncias rechazadas
+                            </Typography>
+                        </Tooltip>
+                    </Box>
+                    <Box
+                        sx={{
+                            backgroundColor: theme => theme.palette.error.main,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: 50,
+                        }}
+                    >
+                        <Typography variant="h6" color="white">
+                            78
+                        </Typography>
+                    </Box>
+                </Card>
+            </Grid>
+            <Grid item xs={9}>
+                <GraficaDenuncias />
+            </Grid>
+            <Grid item xs={3}>
+                <CrmTotalGrowth />
+            </Grid>
+            <Grid item xs={9}>
+                <CrmMonthlyBudget />
             </Grid>
         </Grid>
 

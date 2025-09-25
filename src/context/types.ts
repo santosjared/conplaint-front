@@ -1,5 +1,8 @@
 export type ErrCallbackType = (err: { [key: string]: string }) => void
 
+export type Actions = 'manage' | 'create' | 'read' | 'update' | 'delete'
+export type Subjects = 'all' | 'usuarios' | 'roles' | 'denuncias' | 'home' | 'recibidos' | 'asignados' | 'atender' | 'vehiculos' | 'turnos'
+
 export type LoginParams = {
   email: string
   password: string
@@ -12,32 +15,35 @@ export type RegisterParams = {
   password: string
 }
 
+export type Permission = {
+  subject: Subjects
+  action: Actions[]
+  _id?: string
+  __v?: string
+}
+
+export type Rol = {
+  name: string,
+  permissions: Permission[],
+  description: string
+  _id: string
+  __v?: string
+}
+
 export type UserDataType = {
-  role: {
-    name: string
-    permissions: []
-  }
+  rol: Rol
   name: string,
   lastName: string,
   email: string,
-  userId: string,
   rememberMe?: boolean
+  _id?: string
 }
 
-export type Tokens = {
-  accesToken: string
-  refreshToken: string
-}
 export type AuthValuesType = {
-  tokens: Tokens
   loading: boolean
-  loadingRefresh: boolean
   logout: () => void
-  user: UserDataType | null
   setLoading: (value: boolean) => void
-  setUser: (value: UserDataType | null) => void
   login: (params: LoginParams, errorCallback?: ErrCallbackType) => void
-  refresh: () => Promise<void>
 }
 
 export type ApiValuesType = {
