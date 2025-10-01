@@ -3,29 +3,45 @@ import {
     Card,
     CardContent,
     CardHeader,
-    FormControl,
     Grid,
-    TextField,
     Typography,
-    Autocomplete,
     Button,
-    IconButton,
     useTheme,
+    IconButton,
+    Divider,
+    CircularProgress,
 } from "@mui/material";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { ChangeEvent, useEffect, useState } from "react";
+import { useFieldArray, useForm } from "react-hook-form";
 import { instance } from "src/configs/axios";
 import { UserType } from "src/types/types";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Icon from "src/@core/components/icon";
+import AddPersonal from "./AddPersonal";
+import AddServices from "./AddServices";
+import EditServices from "./EditService";
+import EditCargo from "./EditCargo";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "src/store";
+import { updateShit } from "src/store/shits";
 
-// Types
+interface User {
+    cargo?: string
+    user: UserType
+}
+
+interface Services {
+    name: string;
+    otros: string;
+    users: User[];
+}
 interface HourRange {
     name: string;
     hrs_i: string;
     hrs_s: string;
+    services: Services[];
 }
 
 interface ShiftsType {
@@ -35,59 +51,34 @@ interface ShiftsType {
     hrs: HourRange[];
 }
 
-interface AsignedItem {
-    servicios: string;
-    otros: string;
-    user: UserType | null;
-}
-
-interface FormValues {
-    asigned: AsignedItem[];
-}
-
-// Validation Schema
-const schema = yup.object().shape({
-    asigned: yup.array().of(
-        yup.object().shape({
-            servicios: yup.string().required("Campo requerido"),
-            otros: yup.string().required("Campo requerido"),
-            user: yup.object().required("Usuario requerido"),
-        })
-    ),
-});
+const defaultValues: ShiftsType = {
+    date: "",
+    supervisor: null,
+    hrs: [],
+};
 
 const Asignar = () => {
 
     const router = useRouter();
     const { id } = router.query;
 
-    const [shift, setShift] = useState<ShiftsType | null>(null);
-    const [users, setUsers] = useState<UserType[]>([]);
+    const [shift, setShift] = useState<ShiftsType>(defaultValues);
+    const [openAddPersonal, setOpenAddPersonal] = useState<boolean>(false);
+    const [openAddService, setOpenAddService] = useState<boolean>(false);
+    const [openEditService, setOpenEditService] = useState<boolean>(false);
+    const [openEditcargo, setOpenEditcargo] = useState<boolean>(false);
+    const [indexHr, setIndexHr] = useState<number>(0);
+    const [indexService, setIndexService] = useState<number>(0);
+    const [indexUser, setIndexUser] = useState<number>(0)
+    const [loading, setLoading] = useState<boolean>(false)
 
-    const theme = useTheme();
+    const theme = useTheme()
 
-    // Form setup
-    const {
-        control,
-        handleSubmit,
-        formState: { errors },
-        reset,
-        watch,
-    } = useForm<FormValues>({
-        resolver: yupResolver(schema),
-        defaultValues: {
-            asigned: [],
-        },
-    });
+    const toggleAddPersonal = () => setOpenAddPersonal(!openAddPersonal);
+    const toggleAddService = () => setOpenAddService(!openAddService);
+    const toggleEditService = () => setOpenEditService(!openEditService);
+    const toggleEditCargo = () => setOpenEditcargo(!openEditcargo)
 
-    const asigned = watch("asigned");
-
-    const { fields, append, remove } = useFieldArray({
-        control,
-        name: "asigned",
-    })
-
-    // Fetch shift data
     useEffect(() => {
         if (id) {
             const fetchShift = async () => {
@@ -95,57 +86,93 @@ const Asignar = () => {
                     const response = await instance.get(`/shits/${id}`);
                     const data = response.data;
                     setShift(data);
-                    const initialAsigned = {
-                        servicios: "",
-                        otros: "",
-                        user: null,
-                    };
-                    reset({ asigned: [initialAsigned] });
                 } catch (error) {
                     console.error("Error fetching shift:", error);
                 }
             };
             fetchShift();
         }
-    }, [id, reset]);
+    }, [id]);
 
-    // Fetch available users
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const response = await instance.get(`/shits/users-available`);
-                setUsers(response.data);
-            } catch (error) {
-                console.error("Error fetching users:", error);
-            }
+    const dispatch = useDispatch<AppDispatch>()
+
+    const handleAddService = (indexHr: number) => {
+        setIndexHr(indexHr);
+        toggleAddService();
+    }
+    const handleAddPersonalAutomatic = (indexHr: number, indexService: number) => {
+        setIndexHr(indexHr);
+        setIndexService(indexService);
+        toggleAddPersonal();
+    }
+    const handleEditService = (indexHr: number, indexService: number) => {
+        setIndexHr(indexHr);
+        setIndexService(indexService);
+        toggleEditService();
+    }
+
+    const handleDeleteService = (indexHr: number, indexService: number) => {
+        const updatedHrs = [...(shift.hrs || [])];
+        const updatedServices = [...(updatedHrs[indexHr].services || [])];
+
+        updatedServices.splice(indexService, 1);
+
+        updatedHrs[indexHr] = {
+            ...updatedHrs[indexHr],
+            services: updatedServices
         };
-        fetchUsers();
-    }, []);
 
-    // Submit handler
-    const onSubmit = async (data: FormValues) => {
+        setShift({ ...shift, hrs: updatedHrs });
+    }
+
+    const handleEditCargo = (indexHr: number, indexService: number, indexUser: number) => {
+        setIndexHr(indexHr);
+        setIndexService(indexService);
+        setIndexUser(indexUser)
+        toggleEditCargo();
+    }
+
+    const handleSave = async () => {
+        setLoading(true);
+
+        // Transformamos el shift para enviar solo los IDs al backend
+        const cleanedShift = {
+            ...shift,
+            supervisor: shift?.supervisor?._id || null, // solo el ID del supervisor
+            hrs: shift.hrs?.map(hour => ({
+                ...hour,
+                services: hour?.services?.map(service => ({
+                    ...service,
+                    users: service.users?.map(user => ({
+                        user: user.user._id, // solo el ID
+                        cargo: user.cargo || '' // opcional, depende de si el campo es requerido
+                    }))
+                }))
+            }))
+        };
+
         try {
-            const payload = {
-                shiftId: shift?._id,
-                assignments: data.asigned,
-            };
-            console.log("Payload to submit:", payload);
-
-            await instance.post("/shits/asignar", payload);
-            alert("Asignación exitosa");
-            router.push("/turnos"); // O ruta correspondiente
+            await dispatch(updateShit(cleanedShift));
+            router.push('/shifts');
         } catch (error) {
-            console.error("Error al enviar:", error);
-            alert("Error al asignar usuarios.");
+            console.error('Error al guardar el turno:', error);
+        } finally {
+            setLoading(false);
         }
     };
+
 
     const [año, mes, día] = shift?.date?.split("-") || ["", "", ""];
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
-            <Grid container spacing={6}>
-                <Grid item xs={12}>
+        <Grid container spacing={6}>
+            <Grid item xs={12}>
+
+                {loading ?
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <CircularProgress />
+                    </Box>
+                    :
                     <Card>
                         <CardHeader
                             title={`Asignar personal al turno de la fecha ${día}/${mes}/${año}`}
@@ -161,8 +188,8 @@ const Asignar = () => {
                             </Box>
 
                             <Box sx={{ mb: 2 }}>
-                                {shift?.hrs.map((hourRange, index) => (
-                                    <Card variant="outlined" elevation={0} key={index} sx={{ mb: 4 }}>
+                                {shift?.hrs.map((hourRange, indexHrs) => (
+                                    <Card variant="outlined" elevation={0} key={indexHrs} sx={{ mb: 4 }}>
                                         <CardContent>
                                             <Box
                                                 sx={{
@@ -178,122 +205,69 @@ const Asignar = () => {
                                                     {hourRange.hrs_i} - {hourRange.hrs_s}
                                                 </Typography>
                                             </Box>
-                                            {fields.map((field, index) => {
-                                                const userSelected = asigned[index]?.user;
+                                            {hourRange?.services?.map((service, indexService) => {
                                                 return (
-                                                    <Grid container spacing={2} sx={{ mt: 2 }}>
-                                                        <Grid item xs={5.5}>
-                                                            <FormControl fullWidth>
-                                                                <Controller
-                                                                    name={`asigned.${index}.servicios`}
-                                                                    control={control}
-                                                                    render={({ field }) => (
-                                                                        <TextField
-                                                                            {...field}
-                                                                            label={`Servicio ${index + 1}`}
-                                                                            placeholder="Vehículo de servicio"
-                                                                            value={field.value}
-                                                                            onChange={(e) =>
-                                                                                field.onChange(e.target.value.toUpperCase())
-                                                                            }
-                                                                            error={
-                                                                                !!errors.asigned?.[index]?.servicios
-                                                                            }
-                                                                            helperText={
-                                                                                errors.asigned?.[index]?.servicios
-                                                                                    ?.message
-                                                                            }
-                                                                        />
-                                                                    )}
-                                                                />
-                                                            </FormControl>
-                                                        </Grid>
-
-                                                        <Grid item xs={5.5}>
-                                                            <FormControl fullWidth>
-                                                                <Controller
-                                                                    name={`asigned.${index}.otros`}
-                                                                    control={control}
-                                                                    render={({ field }) => (
-                                                                        <TextField
-                                                                            {...field}
-                                                                            label={`Otro ${index + 1}`}
-                                                                            placeholder="Zona alta n-8"
-                                                                            value={field.value}
-                                                                            onChange={(e) =>
-                                                                                field.onChange(e.target.value.toUpperCase())
-                                                                            }
-                                                                            error={!!errors.asigned?.[index]?.otros}
-                                                                            helperText={
-                                                                                errors.asigned?.[index]?.otros?.message
-                                                                            }
-                                                                        />
-                                                                    )}
-                                                                />
-                                                            </FormControl>
-                                                        </Grid>
-                                                        <Grid item xs={1}>
-                                                            <IconButton onClick={() => remove(index)} sx={{ mt: 1 }}>
-                                                                <Icon icon='ic:baseline-clear' />
-                                                            </IconButton>
-                                                        </Grid>
-
-                                                        <Grid item xs={5.5}>
-                                                            <Typography variant="subtitle2">
-                                                                {userSelected?.post || "Sin cargo"}
+                                                    <Grid container spacing={2} sx={{ mt: 2 }} key={indexService}>
+                                                        <Grid item xs={service.otros ? 5 : 11}>
+                                                            <Typography variant="subtitle1">
+                                                                {service.name || "No definido"}
                                                             </Typography>
                                                         </Grid>
-
-                                                        <Grid item xs={5.5}>
-                                                            <FormControl fullWidth>
-                                                                <Controller
-                                                                    name={`asigned.${index}.user`}
-                                                                    control={control}
-                                                                    render={({ field: { onChange, value }, fieldState: { error } }) => (
-                                                                        <Autocomplete
-                                                                            disablePortal
-                                                                            options={users}
-                                                                            getOptionLabel={(option: UserType) =>
-                                                                                `${option.firstName} ${option.paternalSurname || ""} ${option.maternalSurname || ""}`.trim()
-                                                                            }
-                                                                            value={value || null}
-                                                                            isOptionEqualToValue={(opt, val) =>
-                                                                                opt._id === val?._id
-                                                                            }
-                                                                            onChange={(_, newValue) => onChange(newValue)}
-                                                                            renderInput={(params) => (
-                                                                                <TextField
-                                                                                    {...params}
-                                                                                    label="Usuario"
-                                                                                    error={!!error}
-                                                                                    helperText={error?.message}
-                                                                                />
-                                                                            )}
-                                                                        />
-                                                                    )}
-                                                                />
-                                                            </FormControl>
-                                                        </Grid>
+                                                        {service.otros && <Grid item xs={6}>
+                                                            <Typography variant="subtitle1">
+                                                                {service.otros}
+                                                            </Typography>
+                                                        </Grid>}
                                                         <Grid item xs={1}>
-                                                            <IconButton onClick={() => remove(index)} sx={{ mt: 1 }}>
-                                                                <Icon icon='ic:baseline-clear' />
-                                                            </IconButton>
+                                                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                                                <IconButton size='small' onClick={() => handleEditService(indexHrs, indexService)}>
+                                                                    <Icon icon='mdi:pencil-outline' fontSize={20} color={theme.palette.info.main} />
+                                                                </IconButton>
+                                                                <IconButton size='small' onClick={() => handleDeleteService(indexHrs, indexService)}>
+                                                                    <Icon icon='ic:outline-delete' fontSize={20} color={theme.palette.error.main} />
+                                                                </IconButton>
+                                                            </Box>
+                                                        </Grid>
+                                                        <Grid item xs={12}>
+                                                            {service?.users?.map((user, idx) => (
+                                                                <Grid container spacing={1} key={idx}>
+                                                                    {service.otros && <Grid item xs={0.4}>
+                                                                        <IconButton size='small' onClick={() => handleEditCargo(indexHrs, indexService, idx)}>
+                                                                            <Icon icon='mdi:pencil-outline' fontSize={20} color={theme.palette.info.main} />
+                                                                        </IconButton>
+                                                                    </Grid>}
+                                                                    {service.otros && <Grid item xs={4.5}>
+                                                                        <Typography variant="subtitle2">
+                                                                            {user?.cargo ? user?.cargo : user?.user?.post || "Sin cargo"}
+                                                                        </Typography>
+                                                                    </Grid>}
+                                                                    <Grid item xs={service.otros ? 5 : 11}>
+                                                                        <Typography variant="subtitle2">
+                                                                            {user?.user?.grade || ''} {user?.user?.firstName || "Sin nombre"} {user?.user?.lastName || ''} {user?.user?.paternalSurname || ''} {user?.user?.maternalSurname || ''}
+                                                                        </Typography>
+                                                                    </Grid>
+                                                                </Grid>
+                                                            ))}
+                                                        </Grid>
+                                                        <Grid item xs={12}>
+                                                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                                                <Button
+                                                                    variant='contained'
+                                                                    color='primary'
+                                                                    startIcon={<Icon icon='mdi:add-circle' />}
+                                                                    onClick={() => handleAddPersonalAutomatic(indexHrs, indexService)}
+                                                                >
+                                                                    Agregar personal
+                                                                </Button>
+                                                            </Box>
                                                         </Grid>
                                                     </Grid>
 
                                                 )
                                             })}
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                                                 <Button
-                                                    variant='contained'
-                                                    color='primary'
-                                                    startIcon={<Icon icon='mdi:add-circle' />}
-                                                    onClick={() => router.push('/shifts')}
-                                                >
-                                                    Agregar personal
-                                                </Button>
-                                                <Button
-                                                    type='submit'
+                                                    onClick={() => handleAddService(indexHrs)}
                                                     variant='contained'
                                                     color='primary'
                                                     startIcon={<Icon icon='mdi:add-circle' />}
@@ -317,20 +291,24 @@ const Asignar = () => {
                                     Cancelar
                                 </Button>
                                 <Button
-                                    type='submit'
                                     variant='contained'
                                     color='primary'
+                                    onClick={handleSave}
                                     startIcon={<Icon icon='mdi:content-save' />}
                                 >
                                     Guardar
                                 </Button>
                             </Box>
                         </CardContent>
-                    </Card>
-                </Grid>
+                    </Card>}
             </Grid>
-        </form>
+            <AddPersonal open={openAddPersonal} toggle={toggleAddPersonal} shift={shift} setShift={setShift} indexHr={indexHr} indexService={indexService} />
+            <AddServices open={openAddService} toggle={toggleAddService} shift={shift} setShift={setShift} indexHr={indexHr} />
+            <EditServices open={openEditService} toggle={toggleEditService} shift={shift} setShift={setShift} indexHr={indexHr} indexService={indexService} />
+            <EditCargo open={openEditcargo} toggle={toggleEditCargo} shift={shift} setShift={setShift} indexHr={indexHr} indexService={indexService} indexUser={indexUser} />
+        </Grid>
     );
 };
+
 
 export default Asignar;

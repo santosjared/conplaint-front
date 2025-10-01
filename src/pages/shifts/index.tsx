@@ -184,7 +184,7 @@ const Shifts = () => {
         dispatch(fetchData({ field, skip: page * pageSize, limit: pageSize }))
     }
     const allData = async () => {
-        dispatch(fetchData({ field: '', skip: page * pageSize, limit: pageSize }))
+        dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
     }
     return (
         <Grid container spacing={6}>

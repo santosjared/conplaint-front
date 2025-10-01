@@ -324,10 +324,10 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                                         error={Boolean(errors.gender)}
                                     >
                                         <MenuItem value='M'>
-                                            M
+                                            Masculino
                                         </MenuItem>
                                         <MenuItem value='F'>
-                                            F
+                                            Femenino
                                         </MenuItem>
                                     </Select>
                                 )}

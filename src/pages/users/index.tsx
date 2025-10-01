@@ -293,7 +293,7 @@ const Users = () => {
                 cancelButtonText: 'Cancelar',
                 confirmButtonColor: '#72E128',
                 confirmButtonText: 'reincorporar',
-            }).then(async (result) => { return await result.isConfirmed });
+            }).then(async (result) => { return result.isConfirmed });
             if (confirme) {
                 dispatch(upUser({ filters: { filter: '', skip: page * pageSize, limit: pageSize }, id: user._id }))
             }

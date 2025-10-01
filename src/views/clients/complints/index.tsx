@@ -184,6 +184,8 @@ const ComplaintsClient = ({ complaints, page, pageSize, setPage, limit, status }
 
     const [expanded, setExpanded] = useState<number | null>(null);
 
+    console.log(complaints)
+
     const groupedComplaints = groupByDate(complaints)
 
     const handleExpandClick = (index: number) => {
