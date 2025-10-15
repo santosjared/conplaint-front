@@ -17,20 +17,14 @@ interface Props {
 interface RefuseProps extends Props {
     _id: string
 }
-export const fetchData = createAsyncThunk('complaintsClient/fetchData', async ({ status, skip, limit, name = '', date = '' }: Props) => {
-    try {
-        const response = await instance.get('/complaints-client/complaints-with-status', { params: { name, date, status, skip, limit } });
+export const fetchData = createAsyncThunk('complaintsClient/fetchData',
+    async (filters: { [key: string]: any }) => {
+        const response = await instance.get('/complaints-client', {
+            params: filters
+        })
         return response.data
-    } catch (e) {
-        console.log(e);
-        Swal.fire({
-            title: '¡Error!',
-            text: 'Estamos teniendo problemas al solicitar datos. Por favor contacte al desarrollador del sistema para más asistencia.',
-            icon: "error"
-        });
-        return null
     }
-})
+);
 
 export const refusedComplaints = createAsyncThunk('complaintsClient/refusedComplaints', async ({ status, skip, limit, _id }: RefuseProps, { dispatch }: Redux) => {
     try {
@@ -58,9 +52,8 @@ export const complaintsClientSlice = createSlice({
     reducers: {},
     extraReducers: builder => {
         builder.addCase(fetchData.fulfilled, (state, action) => {
-            state.data = action.payload?.data || []
+            state.data = action.payload?.result || []
             state.total = action.payload?.total || 0
-            state.totalWaiting = action.payload?.totalWaiting || 0
         })
     }
 }

@@ -7,7 +7,7 @@ import { getInitials } from 'src/@core/utils/get-initials';
 import { ImageContainer } from 'src/components/image-container';
 import getConfig from 'src/configs/environment'
 import dynamic from 'next/dynamic';
-import { format, isToday, isYesterday, parseISO } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from 'src/store';
 import { refusedComplaints } from 'src/store/clients/complaints';
@@ -184,8 +184,6 @@ const ComplaintsClient = ({ complaints, page, pageSize, setPage, limit, status }
 
     const [expanded, setExpanded] = useState<number | null>(null);
 
-    console.log(complaints)
-
     const groupedComplaints = groupByDate(complaints)
 
     const handleExpandClick = (index: number) => {
@@ -212,56 +210,56 @@ const ComplaintsClient = ({ complaints, page, pageSize, setPage, limit, status }
                                         sx={{ backgroundColor: theme => theme.palette.primary.main }}
                                         avatar={
                                             <Avatar sx={{ bgcolor: 'success.main' }} aria-label="recipe">
-                                                {getInitials(complaint.userId.name, complaint.userId.lastName)}
+                                                {getInitials(complaint?.userId?.name || 'No definido', complaint?.userId?.lastName || 'No definido')}
                                             </Avatar>
                                         }
-                                        action={complaint.status !== 'acepted' ? <Options skip={page} limit={limit} status={status || ''} _id={complaint._id || ''} /> : null}
+                                        action={complaint?.status !== 'acepted' ? <Options skip={page} limit={limit} status={status || ''} _id={complaint?._id || ''} /> : null}
                                         title={
                                             <Typography variant="h6" sx={{ color: 'white' }}>
-                                                {`${complaint.userId.name} ${complaint.userId.lastName}`}
+                                                {`${complaint?.userId?.name} ${complaint?.userId?.lastName}`}
                                             </Typography>
                                         }
                                         subheader={<Box>
-                                            <Typography variant='body1' sx={{ color: complaitStatusObject[complaint.status || ''].color }}>{complaint.userId.email} - cel.:{complaint.userId.phone}</Typography>
-                                            <Typography variant='body1' sx={{ color: complaitStatusObject[complaint.status || ''].color }}>
-                                                {complaitStatusObject[complaint.status || ''].status} - envio a las: {format(new Date(complaint.createdAt), 'HH:mm')}
+                                            <Typography variant='body1' sx={{ color: complaitStatusObject[complaint?.status || ''].color }}>{complaint?.userId?.email} - cel.:{complaint?.userId?.phone}</Typography>
+                                            <Typography variant='body1' sx={{ color: complaitStatusObject[complaint?.status || ''].color }}>
+                                                {complaitStatusObject[complaint?.status || ''].status} - envio a las: {format(new Date(complaint?.createdAt), 'HH:mm')}
                                             </Typography>
                                         </Box>
                                         }
                                     />
                                     <CardContent>
                                         <Typography variant="h6">Tipo de denuncia</Typography>
-                                        <Typography variant="body1">{complaint.complaints ? complaint.complaints.name : complaint.otherComplaints}</Typography>
+                                        <Typography variant="body1">{complaint?.complaints ? complaint?.complaints?.name : complaint?.otherComplaints}</Typography>
                                         <Divider />
-                                        {(complaint.aggressor || complaint.victim || complaint.otherAggressor || complaint.otherVictim) &&
+                                        {(complaint?.aggressor || complaint?.victim || complaint?.otherAggressor || complaint?.otherVictim) &&
                                             <Box><Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                {(complaint.aggressor || complaint.otherAggressor) &&
+                                                {(complaint?.aggressor || complaint?.otherAggressor) &&
                                                     <Box>
                                                         <Typography variant="h6">Agresor</Typography>
-                                                        <Typography variant="body1">{complaint.aggressor && complaint.aggressor.name !== 'Otro' ? complaint.aggressor.name : complaint.otherAggressor}</Typography>
+                                                        <Typography variant="body1">{complaint?.aggressor && complaint?.aggressor?.name !== 'Otro' ? complaint?.aggressor?.name : complaint?.otherAggressor}</Typography>
                                                     </Box>
                                                 }
-                                                {(complaint.victim || complaint.otherVictim) &&
+                                                {(complaint?.victim || complaint?.otherVictim) &&
                                                     <Box>
                                                         <Typography variant="h6">Victima</Typography>
-                                                        <Typography variant="body1">{complaint.victim && complaint.victim.name !== 'Otro' ? complaint.victim.name : complaint.otherVictim}</Typography>
+                                                        <Typography variant="body1">{complaint?.victim && complaint?.victim?.name !== 'Otro' ? complaint?.victim?.name : complaint?.otherVictim}</Typography>
                                                     </Box>
                                                 }
                                             </Box>
                                                 <Divider />
                                             </Box>}
-                                        {complaint.description && (<Box>
+                                        {complaint?.description && (<Box>
                                             <Typography variant="h6">Descripcion</Typography>
-                                            <Typography variant="body1">{complaint.description}</Typography>
+                                            <Typography variant="body1">{complaint?.description}</Typography>
                                             <Divider />
                                         </Box>)}
-                                        {complaint.place && (
+                                        {complaint?.place && (
                                             <Box>
                                                 <Typography variant="h6">Lugar del hecho</Typography>
-                                                <Typography variant="body1">{complaint.place}</Typography>
+                                                <Typography variant="body1">{complaint?.place}</Typography>
                                             </Box>
                                         )}
-                                        {(complaint.images!.length > 0 || complaint.video || (complaint.latitude && complaint.longitude)) &&
+                                        {(complaint?.images!.length > 0 || complaint?.video || (complaint?.latitude && complaint?.longitude)) &&
                                             <Fragment><CardActions>
                                                 <ExpanMore
                                                     expand={expanded === index}
@@ -274,19 +272,19 @@ const ComplaintsClient = ({ complaints, page, pageSize, setPage, limit, status }
                                             </CardActions>
                                                 <Collapse in={expanded === index} timeout='auto' unmountOnExit>
                                                     <CardContent>
-                                                        {complaint.images!.length > 0 && (
+                                                        {complaint?.images!.length > 0 && (
                                                             <Fragment key={index}>
-                                                                {complaint.images?.map((value) => (
+                                                                {complaint?.images?.map((value) => (
                                                                     <Box sx={{ mb: 3 }} key={value}>
                                                                         <ImageContainer src={`${getConfig().backendURI}/images/${value}`} alt='img' />
                                                                     </Box>
                                                                 ))}
                                                             </Fragment>
                                                         )}
-                                                        {complaint.video && (
+                                                        {complaint?.video && (
                                                             <Box sx={{ mb: 3 }}>
                                                                 <video
-                                                                    src={`${getConfig().backendURI}/videos/${complaint.video}`}
+                                                                    src={`${getConfig().backendURI}/videos/${complaint?.video}`}
                                                                     controls
                                                                     style={{
                                                                         width: '100%',
@@ -298,10 +296,10 @@ const ComplaintsClient = ({ complaints, page, pageSize, setPage, limit, status }
                                                                 />
                                                             </Box>
                                                         )}
-                                                        {complaint.latitude && complaint.longitude && (
+                                                        {complaint?.latitude && complaint?.longitude && (
                                                             <Box sx={{ mb: 3 }}>
                                                                 <MapLocation
-                                                                    center={[parseFloat(complaint.latitude), parseFloat(complaint.longitude)]}
+                                                                    center={[parseFloat(complaint?.latitude), parseFloat(complaint?.longitude)]}
                                                                 />
                                                             </Box>
                                                         )}

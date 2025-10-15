@@ -1,5 +1,5 @@
 import { Box, Button, Dialog, DialogActions, DialogContent, FormControl, FormHelperText, Grid, IconButton, TextField, Typography } from "@mui/material"
-import { forwardRef } from "react";
+import { forwardRef, useEffect } from "react";
 import Fade, { FadeProps } from '@mui/material/Fade'
 import { ReactElement, Ref } from "react";
 import Icon from "src/@core/components/icon";
@@ -13,16 +13,29 @@ interface User {
     user: UserType
 }
 
-interface Services {
-    name: string;
-    otros: string;
-    users: User[];
+interface ZoneType {
+    _id?: string
+    name: string
 }
+
+interface Services {
+    _id?: string
+    name: string;
+}
+
+interface UserService {
+    services: Services,
+    zone: ZoneType,
+    otherService: string,
+    otherZone: string
+    users: User[]
+}
+
 interface HourRange {
     name: string;
     hrs_i: string;
     hrs_s: string;
-    services: Services[];
+    services: UserService[];
 }
 
 interface ShiftsType {
@@ -69,6 +82,11 @@ const EditCargo = ({ open, toggle, shift, setShift, indexHr, indexService, index
         mode: 'onChange',
         resolver: yupResolver(schema)
     })
+
+    useEffect(() => {
+        const currentCargo = shift.hrs?.[indexHr]?.services?.[indexService]?.users?.[indexUser]?.cargo || ''
+        reset({ cargo: currentCargo })
+    }, [indexHr, indexService, indexUser, shift, reset])
 
     const onSubmit = (data: { cargo: string }) => {
         const updatedShift = { ...shift };

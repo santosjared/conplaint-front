@@ -11,16 +11,29 @@ interface User {
     user: UserType
 }
 
-interface Services {
-    name: string;
-    otros: string;
-    users: User[];
+interface ZoneType {
+    _id?: string
+    name: string
 }
+
+interface Services {
+    _id?: string
+    name: string;
+}
+
+interface UserService {
+    services: Services,
+    zone: ZoneType,
+    otherService: string,
+    otherZone: string
+    users: User[]
+}
+
 interface HourRange {
     name: string;
     hrs_i: string;
     hrs_s: string;
-    services: Services[];
+    services: UserService[];
 }
 
 interface ShiftsType {
@@ -53,7 +66,7 @@ const AddPersonal = ({ open, toggle, shift, setShift, indexHr, indexService }: P
     const [userAvailable, setUserAvailable] = useState<UserType[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
 
-    const hrs = shift?.hrs[indexHr] || [];
+    const hrs = shift?.hrs?.[indexHr] || [];
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -137,7 +150,9 @@ const AddPersonal = ({ open, toggle, shift, setShift, indexHr, indexService }: P
                 </IconButton>
                 <Box sx={{ mb: 4, textAlign: 'center' }}>
                     <Typography variant='h5' sx={{ mb: 3, lineHeight: '2rem' }}>
-                        Agregar personal al servicio {hrs?.services?.[indexService]?.name || 'No definido'} - {hrs?.services?.[indexService]?.otros || ''}
+                        Agregar personal al servicio {hrs?.services?.[indexService]?.otherService
+                            || hrs?.services?.[indexService]?.services.name || 'No definido'} - {hrs?.services?.[indexService]?.otherZone
+                                || hrs?.services?.[indexService]?.zone.name || ''}
                     </Typography>
                     <Grid container spacing={2}>
                         <Grid item xs={8}>

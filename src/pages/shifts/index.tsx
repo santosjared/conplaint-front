@@ -48,6 +48,7 @@ const Shifts = () => {
     const [field, setField] = useState<string>('')
     const [mode, setMode] = useState<'create' | 'edit'>('create')
     const [shitsData, setShitsData] = useState<ShiftsType>(defaultValues)
+    const [dateFilter, setDateFilter] = useState<string>('dd/mm/yyyy')
 
     const columns = [
         {
@@ -69,8 +70,10 @@ const Shifts = () => {
             sortable: false,
             headerName: 'Fecha',
             renderCell: ({ row }: CellType) => {
+                const [year, month, day] = row.date.split('-');
+                const formatted = `${day}/${month}/${year}`;
                 return (
-                    <Typography variant='body2' noWrap>{row.date}</Typography>
+                    <Typography variant='body2' noWrap>{formatted}</Typography>
                 )
             }
         },
@@ -159,6 +162,10 @@ const Shifts = () => {
                         <Icon icon='mdi:account-box-edit-outline' fontSize={20} color={theme.palette.primary.main} />
                         Asignar personal
                     </MenuItem>
+                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleAsigned}>
+                        <Icon icon='mdi:printer-outline' fontSize={20} color={theme.palette.secondary.main} />
+                        Imprimir
+                    </MenuItem>
                 </Menu>
             </>
         )
@@ -186,6 +193,10 @@ const Shifts = () => {
     const allData = async () => {
         dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
     }
+    const filterDate = (date: string) => {
+        setDateFilter(date)
+        dispatch(fetchData({ field: date, skip: page * pageSize, limit: pageSize }))
+    }
     return (
         <Grid container spacing={6}>
             <Grid item xs={12}>
@@ -212,6 +223,15 @@ const Shifts = () => {
                                 InputProps={{
                                     endAdornment: <Icon icon="mdi:search" />,
                                 }}
+                            />
+                            <TextField
+                                label="Buscar por fecha"
+                                variant="outlined"
+                                type='date'
+                                name="search_date"
+                                autoComplete="off"
+                                value={dateFilter}
+                                onChange={(e) => filterDate(e.target.value)}
                             />
 
                             <Button

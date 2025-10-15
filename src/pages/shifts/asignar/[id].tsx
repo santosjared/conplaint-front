@@ -32,20 +32,36 @@ interface User {
     user: UserType
 }
 
-interface Services {
-    name: string;
-    otros: string;
-    users: User[];
+interface ZoneType {
+    _id?: string
+    name: string
 }
+
+interface Services {
+    _id?: string
+    name: string;
+}
+
+interface UserService {
+    services: Services,
+    zone: ZoneType,
+    otherService: string,
+    otherZone: string
+    users: User[]
+}
+
 interface HourRange {
     name: string;
     hrs_i: string;
     hrs_s: string;
-    services: Services[];
+    services: UserService[];
 }
 
 interface ShiftsType {
     _id?: string;
+    __v?: string;
+    createdAt?: string
+    updatedAt?: string
     date: string;
     supervisor: UserType | null;
     hrs: HourRange[];
@@ -134,25 +150,27 @@ const Asignar = () => {
 
     const handleSave = async () => {
         setLoading(true);
-
-        // Transformamos el shift para enviar solo los IDs al backend
         const cleanedShift = {
             ...shift,
-            supervisor: shift?.supervisor?._id || null, // solo el ID del supervisor
+            supervisor: shift?.supervisor?._id || null,
             hrs: shift.hrs?.map(hour => ({
                 ...hour,
                 services: hour?.services?.map(service => ({
                     ...service,
-                    users: service.users?.map(user => ({
-                        user: user.user._id, // solo el ID
-                        cargo: user.cargo || '' // opcional, depende de si el campo es requerido
+                    services: service?.services?._id ? service.services._id : null,
+                    zone: service?.zone?._id ? service.zone._id : null,
+                    users: service?.users?.map(user => ({
+                        user: user?.user?._id,
+                        cargo: user?.cargo || ''
                     }))
                 }))
             }))
         };
 
+        delete cleanedShift._id
+
         try {
-            await dispatch(updateShit(cleanedShift));
+            await dispatch(updateShit({ data: cleanedShift, id: shift._id }));
             router.push('/shifts');
         } catch (error) {
             console.error('Error al guardar el turno:', error);
@@ -188,7 +206,7 @@ const Asignar = () => {
                             </Box>
 
                             <Box sx={{ mb: 2 }}>
-                                {shift?.hrs.map((hourRange, indexHrs) => (
+                                {shift?.hrs?.map((hourRange, indexHrs) => (
                                     <Card variant="outlined" elevation={0} key={indexHrs} sx={{ mb: 4 }}>
                                         <CardContent>
                                             <Box
@@ -208,16 +226,18 @@ const Asignar = () => {
                                             {hourRange?.services?.map((service, indexService) => {
                                                 return (
                                                     <Grid container spacing={2} sx={{ mt: 2 }} key={indexService}>
-                                                        <Grid item xs={service.otros ? 5 : 11}>
+                                                        <Grid item xs={service?.zone?.name ? 5 : 11}>
                                                             <Typography variant="subtitle1">
-                                                                {service.name || "No definido"}
+                                                                {service?.otherService || service?.services?.name || "No definido"}
                                                             </Typography>
                                                         </Grid>
-                                                        {service.otros && <Grid item xs={6}>
-                                                            <Typography variant="subtitle1">
-                                                                {service.otros}
-                                                            </Typography>
-                                                        </Grid>}
+                                                        {service?.zone?.name &&
+                                                            <Grid item xs={6}>
+                                                                <Typography variant="subtitle1">
+                                                                    {service?.otherZone || service?.zone?.name}
+                                                                </Typography>
+                                                            </Grid>
+                                                        }
                                                         <Grid item xs={1}>
                                                             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                                                                 <IconButton size='small' onClick={() => handleEditService(indexHrs, indexService)}>
@@ -231,17 +251,17 @@ const Asignar = () => {
                                                         <Grid item xs={12}>
                                                             {service?.users?.map((user, idx) => (
                                                                 <Grid container spacing={1} key={idx}>
-                                                                    {service.otros && <Grid item xs={0.4}>
+                                                                    {service?.zone?.name && <Grid item xs={0.4}>
                                                                         <IconButton size='small' onClick={() => handleEditCargo(indexHrs, indexService, idx)}>
                                                                             <Icon icon='mdi:pencil-outline' fontSize={20} color={theme.palette.info.main} />
                                                                         </IconButton>
                                                                     </Grid>}
-                                                                    {service.otros && <Grid item xs={4.5}>
+                                                                    {service?.zone?.name && <Grid item xs={4.5}>
                                                                         <Typography variant="subtitle2">
                                                                             {user?.cargo ? user?.cargo : user?.user?.post || "Sin cargo"}
                                                                         </Typography>
                                                                     </Grid>}
-                                                                    <Grid item xs={service.otros ? 5 : 11}>
+                                                                    <Grid item xs={service?.zone?.name ? 5 : 11}>
                                                                         <Typography variant="subtitle2">
                                                                             {user?.user?.grade || ''} {user?.user?.firstName || "Sin nombre"} {user?.user?.lastName || ''} {user?.user?.paternalSurname || ''} {user?.user?.maternalSurname || ''}
                                                                         </Typography>

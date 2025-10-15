@@ -1,5 +1,5 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, FormControl, FormHelperText, Grid, IconButton, TextField, Typography } from "@mui/material"
-import { forwardRef } from "react";
+import { Box, Button, Dialog, DialogActions, DialogContent, FormControl, FormHelperText, Grid, IconButton, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material"
+import { forwardRef, useEffect, useState } from "react";
 import Fade, { FadeProps } from '@mui/material/Fade'
 import { ReactElement, Ref } from "react";
 import Icon from "src/@core/components/icon";
@@ -7,23 +7,36 @@ import { UserType } from "src/types/types";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from 'yup'
-
+import { instance } from "src/configs/axios";
 
 interface User {
     cargo?: string
     user: UserType
 }
 
-interface Services {
-    name: string;
-    otros: string;
-    users: User[];
+interface ZoneType {
+    _id?: string
+    name: string
 }
+
+interface Services {
+    _id?: string
+    name: string;
+}
+
+interface UserService {
+    services: Services,
+    zone: ZoneType,
+    otherService: string,
+    otherZone: string
+    users: User[]
+}
+
 interface HourRange {
     name: string;
     hrs_i: string;
     hrs_s: string;
-    services: Services[];
+    services: UserService[];
 }
 
 interface ShiftsType {
@@ -41,9 +54,11 @@ interface Props {
     indexHr: number;
 }
 
-const defaultValues: Services = {
-    name: '',
-    otros: '',
+const defaultValues: UserService = {
+    services: { name: '', _id: '' },
+    zone: { name: '', _id: '' },
+    otherService: '',
+    otherZone: '',
     users: []
 }
 
@@ -55,27 +70,83 @@ const Transition = forwardRef(function Transition(
 })
 
 const schema = yup.object().shape({
-    name: yup.string().required('El nombre del servicio es requerido'),
-    otros: yup.string().optional(),
+    services: yup.object().shape({
+        name: yup.string().required('El nombre del servicio es requerido'),
+        _id: yup.string().optional(),
+    }),
+    zone: yup.object().shape({
+        name: yup.string().optional(),
+        _id: yup.string().optional(),
+    }).optional(),
+    otherService: yup
+        .string()
+        .when('services', {
+            is: (val: unknown) => (val as Services)?.name === 'OTRO',
+            then: schema =>
+                schema
+                    .required('El campo otro servicio es requerido')
+                    .min(3, 'Debe tener al menos 3 caracteres'),
+            otherwise: schema => schema.notRequired()
+        }),
+    otherZone: yup.string()
+        .when('zone', {
+            is: (val: unknown) => (val as ZoneType)?.name === 'OTRO',
+            then: schema =>
+                schema
+                    .required('El campo otro zona es requerido')
+                    .min(3, 'Debe tener al menos 3 caracteres'),
+            otherwise: schema => schema.notRequired()
+        }),
     users: yup.array().of(yup.object()).optional()
-})
-
+});
 const AddServices = ({ open, toggle, shift, setShift, indexHr }: Props) => {
 
-    const hrs = shift?.hrs[indexHr] || { hrs_i: '', hrs_s: '' };
+    const [services, setServices] = useState<Services[]>([]);
+    const [zone, setZone] = useState<ZoneType[]>([])
+
+    useEffect(() => {
+        const fetchServices = async () => {
+            try {
+                const response = await instance.get('/shits/services');
+                setServices([...response.data, { name: 'OTRO', _id: 'OTRO' }])
+            } catch (error) {
+                console.log('error al realizar la peticion de servicios', error)
+            }
+        }
+        fetchServices();
+    }, [open, shift, indexHr])
+
+
+    useEffect(() => {
+        const fetchZone = async () => {
+            try {
+                const response = await instance.get('/shits/zones')
+                setZone([...response.data, { name: 'OTRO', _id: 'OTRO' }])
+            } catch (error) {
+                console.log('error al realizar la peticion de zonas', error)
+            }
+        }
+        fetchZone();
+    }, [open, shift, indexHr])
+
+    const hrs = shift?.hrs?.[indexHr] || { hrs_i: '', hrs_s: '' };
 
     const {
         reset,
+        watch,
         control,
         handleSubmit,
         formState: { errors }
-    } = useForm<Services>({
+    } = useForm<UserService>({
         defaultValues,
         mode: 'onChange',
         resolver: yupResolver(schema)
     })
 
-    const onSubmit = (data: Services) => {
+    const otherService = watch('services');
+    const otherZone = watch('zone');
+
+    const onSubmit = (data: UserService) => {
         const updatedHrs = [...(shift.hrs || [])];
         updatedHrs[indexHr] = {
             ...updatedHrs[indexHr],
@@ -114,43 +185,101 @@ const AddServices = ({ open, toggle, shift, setShift, indexHr }: Props) => {
                         </Typography>
                         <Grid container spacing={2}>
                             <Grid item xs={6}>
-                                <FormControl fullWidth>
+                                <FormControl fullWidth sx={{ mb: 6 }}>
+                                    <InputLabel id="services-select">Servicios</InputLabel>
                                     <Controller
-                                        name='name'
+                                        name="services"
                                         control={control}
-                                        render={({ field }) => (
-                                            <TextField
-                                                {...field}
-                                                autoComplete='off'
-                                                onChange={e => field.onChange(e.target.value.toUpperCase())}
-                                                value={field.value || ''}
-                                                label='Servicio'
-                                                placeholder='VEHICULO DE SERVICIO'
-                                            />
+                                        render={({ field: { onChange, value } }) => (
+                                            <Select
+                                                labelId="services-select"
+                                                id="select-services"
+                                                label="Servicios"
+                                                value={value?._id ?? ''}
+                                                error={Boolean(errors.services)}
+                                                onChange={(e) => {
+                                                    const selectedId = e.target.value as string
+                                                    const selectedService = services.find((serv) => serv._id === selectedId) || null
+                                                    onChange(selectedService)
+                                                }}
+                                            >
+                                                {services.map((serv, index) => (
+                                                    <MenuItem value={serv._id || ''} key={index}>{serv.name}</MenuItem>
+                                                ))}
+                                            </Select>
                                         )}
                                     />
-                                    {errors.name && <FormHelperText sx={{ color: 'error.main' }}>{errors.name.message}</FormHelperText>}
+                                    {errors.services && <FormHelperText sx={{ color: 'error.main' }}>{errors.services?.message || errors.services.name?.message || errors.services._id?.message}</FormHelperText>}
                                 </FormControl>
                             </Grid>
+                            {otherService?.name == 'OTRO' &&
+                                <Grid item xs={6}>
+                                    <FormControl fullWidth sx={{ mb: 3 }}>
+                                        <Controller
+                                            name="otherService"
+                                            control={control}
+                                            rules={{ required: true }}
+                                            render={({ field: { value, onChange } }) => (
+                                                <TextField
+                                                    label='Especifica otro servicio'
+                                                    onChange={(e) => onChange(e.target.value.toUpperCase())}
+                                                    error={Boolean(errors.otherService)}
+                                                    value={value}
+                                                />
+                                            )}
+                                        />
+                                        {errors.otherService && <FormHelperText sx={{ color: 'error.main' }}>{errors.otherService.message}</FormHelperText>}
+                                    </FormControl>
+                                </Grid>
+                            }
                             <Grid item xs={6}>
-                                <FormControl fullWidth>
+                                <FormControl fullWidth sx={{ mb: 6 }}>
+                                    <InputLabel id="zona-select">Zona</InputLabel>
                                     <Controller
-                                        name='otros'
+                                        name="zone"
                                         control={control}
-                                        render={({ field }) => (
-                                            <TextField
-                                                {...field}
-                                                autoComplete='off'
-                                                onChange={e => field.onChange(e.target.value.toUpperCase())}
-                                                value={field.value || ''}
-                                                label='Otros'
-                                                placeholder='ZONA - BAJA C-6'
-                                            />
+                                        render={({ field: { onChange, value } }) => (
+                                            <Select
+                                                labelId="zona-select"
+                                                id="select-zona"
+                                                label="Zona"
+                                                value={value?._id ?? ''}
+                                                error={Boolean(errors.zone)}
+                                                onChange={(e) => {
+                                                    const selectedId = e.target.value as string
+                                                    const selectedZone = zone.find((zon) => zon._id === selectedId) || null
+                                                    onChange(selectedZone)
+                                                }}
+                                            >
+                                                {zone.map((zon, index) => (
+                                                    <MenuItem value={zon._id || ''} key={index}>{zon.name}</MenuItem>
+                                                ))}
+                                            </Select>
                                         )}
                                     />
-                                    {errors.otros && <FormHelperText sx={{ color: 'error.main' }}>{errors.otros.message}</FormHelperText>}
+                                    {errors.zone && <FormHelperText sx={{ color: 'error.main' }}>{errors.zone?.message || errors.zone.name?.message || errors.zone._id?.message}</FormHelperText>}
                                 </FormControl>
                             </Grid>
+                            {otherZone?.name == 'OTRO' &&
+                                <Grid item xs={6}>
+                                    <FormControl fullWidth sx={{ mb: 3 }}>
+                                        <Controller
+                                            name="otherZone"
+                                            control={control}
+                                            rules={{ required: true }}
+                                            render={({ field: { value, onChange } }) => (
+                                                <TextField
+                                                    label='Especifica otra zona'
+                                                    onChange={(e) => onChange(e.target.value.toUpperCase())}
+                                                    error={Boolean(errors.otherZone)}
+                                                    value={value}
+                                                />
+                                            )}
+                                        />
+                                        {errors.otherZone && <FormHelperText sx={{ color: 'error.main' }}>{errors.otherZone.message}</FormHelperText>}
+                                    </FormControl>
+                                </Grid>
+                            }
                         </Grid>
                     </Box>
                 </DialogContent>

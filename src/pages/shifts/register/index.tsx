@@ -225,7 +225,7 @@ const AddShifts = ({ toggle, page, pageSize, mode = 'create', defaultValues }: P
                                         <Controller
                                             name={`hrs.${index}.name`}
                                             control={control}
-                                            defaultValue={item.name} // importante
+                                            defaultValue={item.name}
                                             render={({ field }) => (
                                                 <TextField
                                                     {...field}
@@ -316,7 +316,6 @@ const AddShifts = ({ toggle, page, pageSize, mode = 'create', defaultValues }: P
                             Guardar
                         </Button>
                     </Box>
-
                 </fieldset>
             </form>
         </Box>
