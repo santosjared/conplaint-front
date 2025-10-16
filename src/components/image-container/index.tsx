@@ -11,7 +11,7 @@ interface ImageContainerProps {
 
 const StyledBox = styled(Box)(({ theme }) => ({
     position: 'relative',
-    maxWidth: 600,
+    width: '100%',
     height: 200,
     cursor: 'pointer',
     border: `1px solid ${theme.palette.divider}`,
@@ -34,7 +34,6 @@ export const ImageContainer = ({ src, alt }: ImageContainerProps) => {
         }
     };
 
-    // Escucha si entra o sale del modo fullscreen
     useEffect(() => {
         const onChange = () => {
             setIsFullscreen(!!document.fullscreenElement);

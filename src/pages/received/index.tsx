@@ -1,5 +1,5 @@
-import { Badge, Box, Button, Card, FormControl, Grid, Tab, TabProps, TextField, Typography } from "@mui/material";
-import { SyntheticEvent, useEffect, useState } from "react";
+import { Badge, Box, Button, Card, FormControl, Grid, IconButton, Menu, MenuItem, Tab, TabProps, TextField, Typography } from "@mui/material";
+import { Fragment, SyntheticEvent, useEffect, useState, MouseEvent } from "react";
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
@@ -16,6 +16,8 @@ import { styled } from '@mui/material/styles'
 import { DataGrid } from "@mui/x-data-grid";
 import { format, isToday, isYesterday } from 'date-fns';
 import CustomChip from 'src/@core/components/mui/chip'
+import DetailsReceived from "./details";
+import Icon from "src/@core/components/icon";
 
 interface Client {
     name: string
@@ -61,7 +63,72 @@ const ItemTab = styled(Tab)<TabProps>(({ theme }) => ({
 }));
 
 
-const socket = io(environment().backendURI)
+const RowOptions = ({ row }: CellType) => {
+
+    const dispatch = useDispatch<AppDispatch>()
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+    const rowOptionsOpen = Boolean(anchorEl)
+
+    const handleRowOptionsClick = (event: MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget)
+    }
+    const handleRowOptionsClose = () => {
+        setAnchorEl(null)
+    }
+    const handleEdit = () => {
+        // setValue(complaint)
+        // setMode('edit')
+        setAnchorEl(null)
+        // toggle()
+    }
+    const handleRefuse = async () => {
+        setAnchorEl(null)
+        const confirme = await Swal.fire({
+            title: '¿Estas seguro de rechazar la denuncia?',
+            icon: "warning",
+            showCancelButton: true,
+            cancelButtonColor: "#3085d6",
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ff4040',
+            confirmButtonText: 'Si',
+        }).then(async (result) => { return result.isConfirmed });
+        if (confirme) {
+            // dispatch(refusedComplaints({ skip, limit, status, _id }))
+        }
+    }
+
+    return (
+        <>
+            <IconButton size='small' onClick={handleRowOptionsClick}>
+                <Icon icon='mdi:dots-vertical' />
+            </IconButton>
+            <Menu
+                keepMounted
+                anchorEl={anchorEl}
+                open={rowOptionsOpen}
+                onClose={handleRowOptionsClose}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right'
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right'
+                }}
+                PaperProps={{ style: { minWidth: '8rem' } }}
+            >
+                <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
+                    <Icon icon='mdi:account-hard-hat' fontSize={20} color='#00a0f4' />
+                    Atender denuncia
+                </MenuItem>
+                {row.status !== 'refused' && <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleRefuse}>
+                    <Icon icon='mdi:remove-bold' fontSize={20} color='#ff4040' />
+                    Rechazar denuncia
+                </MenuItem>}
+            </Menu>
+        </>
+    )
+}
 
 const Recibidos = () => {
 
@@ -70,6 +137,10 @@ const Recibidos = () => {
     const [page, setPage] = useState<number>(0)
     const [field, setField] = useState<string>('')
     const [date, setDate] = useState<string>('')
+    const [openDetails, setOpenDetails] = useState<boolean>(false)
+    const [dataDetails, setDataDetails] = useState<DataType | null>(null)
+
+    const toggleDetails = () => setOpenDetails(!openDetails)
 
     const dispatch = useDispatch<AppDispatch>()
 
@@ -186,82 +257,104 @@ const Recibidos = () => {
                 />
             )
         },
+        {
+            flex: 0.2,
+            minWidth: 90,
+            field: 'actions',
+            sortable: false,
+            headerName: 'Acciones',
+            renderCell: ({ row }: CellType) => {
+                return (<RowOptions row={row} />)
+            }
+        }
     ]
 
     return (
-        <Grid container spacing={4}>
-            <Grid item xs={12}>
-                <Card>
-                    <TabContext value={activeTab}>
-                        <Box sx={{ borderBottom: 1, borderColor: 'divider', backgroundColor: theme => theme.palette.primary.main }}>
-                            <TabList onChange={handleChange} variant="fullWidth" >
-                                <ItemTab label="Todos" value="all" />
-                                <ItemTab label="Denuncias atendidas" value="acepted" />
-                                <ItemTab label={store.totalWaiting > 0 ? <Badge badgeContent={store.totalWaiting} color="error">
-                                    Denuncias en espera
-                                </Badge> : 'Denuncias en espera'
-                                } value="waiting" sx={{ color: 'white' }} />
-                                <ItemTab label="Denuncias rechazadas" value="refused" sx={{ color: 'white' }} />
-                            </TabList>
-                        </Box>
-                    </TabContext>
-                    <Box sx={{ p: 5 }}>
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={4}>
-                                <FormControl fullWidth sx={{ mb: 1 }}>
-                                    <TextField
-                                        label="Buscar"
-                                        placeholder="Buscar"
-                                        value={field}
-                                        onChange={(e) => setField(e.target.value)}
-                                    />
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={12} sm={4}>
-                                <FormControl fullWidth sx={{ mb: 1 }}>
-                                    <TextField
-                                        label="Buscar por fecha"
-                                        type="date"
-                                        value={date}
-                                        onChange={(e) => { setDate(e.target.value); search(e.target.value) }}
-                                        InputLabelProps={{ shrink: true }}
-                                    />
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={12} sm={4}>
-                                <Button variant="outlined" sx={{ p: 3.5 }} onClick={() => search(field)}>
-                                    Buscar
-                                </Button>
-                                <Button variant="contained" sx={{ ml: 3, p: 3.5 }} onClick={() => search('')}>
-                                    Todos
-                                </Button>
-                            </Grid>
-                        </Grid>
-                    </Box>
-                    <DataGrid
-                        autoHeight
-                        rows={store.data}
-                        columns={columns}
-                        getRowId={(row: any) => row._id}
-                        pagination
-                        pageSize={pageSize}
-                        disableSelectionOnClick
-                        onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
-                        rowsPerPageOptions={[10, 25, 50]}
-                        rowCount={store.total}
-                        paginationMode="server"
-                        onPageChange={(newPage) => setPage(newPage)}
-                        sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
-                        localeText={{
-                            MuiTablePagination: {
-                                labelRowsPerPage: 'Filas por página:',
-                            },
-                        }
-                        }
-                    />
-                </Card>
-            </Grid>
-        </Grid>
+        <Fragment>
+            {openDetails && dataDetails ? (<DetailsReceived data={dataDetails} toggle={toggleDetails} />)
+                :
+                (<Grid container spacing={4}>
+                    <Grid item xs={12}>
+                        <Card>
+                            <TabContext value={activeTab}>
+                                <Box sx={{ borderBottom: 1, borderColor: 'divider', backgroundColor: theme => theme.palette.primary.main }}>
+                                    <TabList onChange={handleChange} variant="fullWidth" >
+                                        <ItemTab label="Todos" value="all" />
+                                        <ItemTab label="Denuncias atendidas" value="acepted" />
+                                        <ItemTab label={store.totalWaiting > 0 ? <Badge badgeContent={store.totalWaiting} color="error">
+                                            Denuncias en espera
+                                        </Badge> : 'Denuncias en espera'
+                                        } value="waiting" sx={{ color: 'white' }} />
+                                        <ItemTab label="Denuncias rechazadas" value="refused" sx={{ color: 'white' }} />
+                                    </TabList>
+                                </Box>
+                            </TabContext>
+                            <Box sx={{ p: 5 }}>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={4}>
+                                        <FormControl fullWidth sx={{ mb: 1 }}>
+                                            <TextField
+                                                label="Buscar"
+                                                placeholder="Buscar"
+                                                value={field}
+                                                onChange={(e) => setField(e.target.value)}
+                                            />
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={12} sm={4}>
+                                        <FormControl fullWidth sx={{ mb: 1 }}>
+                                            <TextField
+                                                label="Buscar por fecha"
+                                                type="date"
+                                                value={date}
+                                                onChange={(e) => { setDate(e.target.value); search(e.target.value) }}
+                                                InputLabelProps={{ shrink: true }}
+                                            />
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={12} sm={4}>
+                                        <Button variant="outlined" sx={{ p: 3.5 }} onClick={() => search(field || date || '')}>
+                                            Buscar
+                                        </Button>
+                                        <Button variant="contained" sx={{ ml: 3, p: 3.5 }} onClick={() => search('')}>
+                                            Todos
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                            <DataGrid
+                                autoHeight
+                                rows={store.data}
+                                columns={columns}
+                                getRowId={(row: any) => row._id}
+                                pagination
+                                pageSize={pageSize}
+                                disableSelectionOnClick
+                                onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+                                rowsPerPageOptions={[10, 25, 50]}
+                                rowCount={store.total}
+                                paginationMode="server"
+                                onPageChange={(newPage) => setPage(newPage)}
+                                onCellClick={(params, event) => {
+                                    if (params.field === 'actions') {
+                                        return
+                                    }
+                                    setDataDetails(params.row)
+                                    toggleDetails()
+                                }}
+                                sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+                                localeText={{
+                                    MuiTablePagination: {
+                                        labelRowsPerPage: 'Filas por página:',
+                                    },
+                                }}
+                            />
+
+                        </Card>
+                    </Grid>
+                </Grid>)
+            }
+        </Fragment>
 
     );
 }
