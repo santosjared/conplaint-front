@@ -61,7 +61,7 @@ const navigation = (): VerticalNavItemsType => {
     },
     {
       title: 'Atender denuncias asignadas',
-      path: '/assigned',
+      path: '/atender',
       subject: 'assigned',
       action: 'read',
       icon: 'mdi:account-box-edit-outline',

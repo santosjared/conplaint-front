@@ -1,10 +1,13 @@
 import {
-    Autocomplete,
     Box,
     Button,
     FormControl,
+    FormHelperText,
     Grid,
     IconButton,
+    InputLabel,
+    MenuItem,
+    Select,
     TextField,
     Typography,
     useTheme
@@ -17,7 +20,6 @@ import { useDispatch } from 'react-redux'
 import { AppDispatch } from 'src/store'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-import { UserType } from 'src/types/types'
 import { instance } from 'src/configs/axios'
 import { addShit, updateShit } from 'src/store/shits'
 
@@ -27,10 +29,17 @@ interface HourRange {
     hrs_s: string
 }
 
+interface GradeType {
+    name: string;
+    _id: string;
+}
+
 interface ShiftsType {
     _id?: string
     date: string
-    supervisor: UserType | null
+    grade: GradeType
+    otherGrade: string
+    supervisor: string
     hrs: HourRange[]
 }
 
@@ -49,13 +58,25 @@ const showErrors = (field: string, valueLen: number, min: number) => {
 }
 
 const schema = yup.object().shape({
+    grade: yup.object({
+        _id: yup.string().required('El campo grado es requerido'),
+        name: yup.string().required('El campo grado es requerido'),
+    }).required('El campo grado es requerido'),
+    otherGrade: yup
+        .string()
+        .when('grade', {
+            is: (val: GradeType | null) => val?.name === 'Otro',
+            then: schema => schema.required('Debe especificar otro tipo de grado'),
+            otherwise: schema => schema.notRequired()
+        }),
     date: yup
         .string()
         .required('El campo fecha es requerido'),
-    supervisor: yup
-        .object()
-        .nullable()
-        .required('El campo supervisor es requerido'),
+    supervisor: yup.string()
+        .transform(value => (value === '' ? undefined : value))
+        .required('El campo supervisor es requerido')
+        .min(4, 'El campo supervisor debe tener al menos 4 caracteres')
+        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo supervisor solo debe contener letras'),
     hrs: yup
         .array()
         .of(
@@ -78,36 +99,34 @@ const schema = yup.object().shape({
 const AddShifts = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Props) => {
     const theme = useTheme()
     const dispatch = useDispatch<AppDispatch>()
-    const [user, setUser] = useState<UserType[]>([])
+    const [grades, setGrades] = useState<GradeType[]>([])
+
     useEffect(() => {
-        const fetchUsers = async () => {
+        const fetchGrades = async () => {
             try {
-                const response = await instance.get('/shits/users')
-                const data = response.data || []
-                if (Array.isArray(data)) {
-                    setUser(data)
-                } else {
-                    console.error('/shits/users no devolvió un array:', data)
-                    setUser([])
-                }
-            } catch (error) {
-                console.error('Error obteniendo usuarios:', error)
-                setUser([])
+                const response = await instance.get('/users/grades');
+                setGrades([...response.data, { name: 'Otro', _id: 'other' }]);
+            } catch (e) {
+                console.log(e)
             }
+
         }
-        fetchUsers()
-    }, [mode])
+        fetchGrades();
+    }, [mode, defaultValues, toggle]);
 
     const {
         reset,
         control,
         handleSubmit,
+        watch,
         formState: { errors }
     } = useForm<ShiftsType>({
-        defaultValues: defaultValues || { date: '', supervisor: null, hrs: [] },
+        defaultValues: defaultValues || { date: '', supervisor: '', otherGrade: '', hrs: [] },
         mode: 'onChange',
         resolver: yupResolver(schema)
     })
+
+    const otherGrade = watch('grade');
 
     const { fields, append, remove } = useFieldArray({
         control,
@@ -118,16 +137,13 @@ const AddShifts = ({ toggle, page, pageSize, mode = 'create', defaultValues }: P
         if (defaultValues) {
             reset(defaultValues)
         } else {
-            reset({ date: '', supervisor: null, hrs: [] })
+            reset({ date: '', supervisor: '', hrs: [] })
         }
     }, [defaultValues, mode, reset])
 
     const onSubmit = (data: ShiftsType) => {
-        const newData = {
-            date: data.date,
-            supervisor: data.supervisor?._id || '',
-            hrs: data.hrs
-        }
+        const newData = { ...data, grade: data.grade._id || '' }
+        delete newData._id
         if (mode === 'edit' && defaultValues?._id) {
             dispatch(
                 updateShit({
@@ -173,32 +189,70 @@ const AddShifts = ({ toggle, page, pageSize, mode = 'create', defaultValues }: P
 
                     <Grid container spacing={2}>
                         <Grid item xs={6}>
+                            <FormControl fullWidth sx={{ mb: 6 }}>
+                                <InputLabel id="grade-select">Grado del supervisor</InputLabel>
+                                <Controller
+                                    name="grade"
+                                    control={control}
+                                    render={({ field: { value, onChange } }) => (
+                                        <Select
+                                            labelId="grade-select"
+                                            id="select-grade"
+                                            label="Grado del supervisor"
+                                            error={Boolean(errors.grade)}
+                                            value={value?._id ?? ''}
+                                            onChange={(e) => {
+                                                const selectedId = e.target.value as string
+                                                const selectedGrade = grades.find((grade) => grade._id === selectedId) || null
+                                                onChange(selectedGrade)
+                                            }}
+                                        >
+                                            {grades.map((value) => (<MenuItem
+                                                value={value._id || ''}
+                                                key={value._id}
+                                            >{value.name}</MenuItem>))}
+                                        </Select>
+                                    )}
+                                />
+                                {errors.grade && <FormHelperText sx={{ color: 'error.main' }}>{errors.grade?.message || errors.grade.name?.message || errors.grade._id?.message}</FormHelperText>}
+                            </FormControl>
+                        </Grid>
+                        {otherGrade?.name == 'Otro' &&
+                            <Grid item xs={6}>
+                                <FormControl fullWidth sx={{ mb: 3 }}>
+                                    <Controller
+                                        name="otherGrade"
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field: { value, onChange } }) => (
+                                            <TextField
+                                                label='Especifica otro grado'
+                                                onChange={(e) => onChange(e.target.value.toUpperCase())}
+                                                error={Boolean(errors.otherGrade)}
+                                                value={value}
+                                            />
+                                        )}
+                                    />
+                                    {errors.otherGrade && <FormHelperText sx={{ color: 'error.main' }}>{errors.otherGrade.message}</FormHelperText>}
+                                </FormControl>
+                            </Grid>
+                        }
+                        <Grid item xs={6}>
                             <FormControl fullWidth sx={{ mb: 3 }}>
                                 <Controller
                                     name='supervisor'
+                                    rules={{ required: true }}
                                     control={control}
-                                    render={({ field: { onChange, value }, fieldState: { error } }) => (
-                                        <Autocomplete
-                                            disablePortal
-                                            options={Array.isArray(user) ? user : []}
-                                            getOptionLabel={(option: UserType) =>
-                                                `${option.firstName} ${option.paternalSurname || ''} ${option.maternalSurname || ''}`.trim()
-                                            }
-                                            value={value || null}
-                                            isOptionEqualToValue={(option, value) => option._id === value?._id}
-                                            onChange={(_, newValue) => onChange(newValue)}
-                                            renderInput={(params) => (
-                                                <TextField
-                                                    {...params}
-                                                    label='Supervisor'
-                                                    error={!!error}
-                                                    helperText={error?.message}
-                                                />
-                                            )}
+                                    render={({ field }) => (
+                                        <TextField
+                                            {...field}
+                                            label='Supervisor'
+                                            placeholder='Jhon Doh'
+                                            error={Boolean(errors.supervisor)}
                                         />
                                     )}
                                 />
-
+                                {errors.supervisor && <FormHelperText sx={{ color: 'error.main' }}>{errors.supervisor.message}</FormHelperText>}
                             </FormControl>
                         </Grid>
                         <Grid item xs={6}>
@@ -206,16 +260,18 @@ const AddShifts = ({ toggle, page, pageSize, mode = 'create', defaultValues }: P
                                 <Controller
                                     name='date'
                                     control={control}
-                                    render={({ field }) => (
-                                        <TextField
-                                            {...field}
-                                            label='Fecha de horario'
-                                            type='date'
-                                            error={!!errors.date}
-                                            helperText={errors.date?.message}
-                                        />
-                                    )}
+                                    render={({ field }) => {
+                                        return (
+                                            <TextField
+                                                {...field}
+                                                label='Fecha de horario'
+                                                type='date'
+                                                error={Boolean(errors.date)}
+                                            />
+                                        )
+                                    }}
                                 />
+                                {errors.date && <FormHelperText sx={{ color: 'error.main' }}>{errors.date.message}</FormHelperText>}
                             </FormControl>
                         </Grid>
                         {fields.map((item, index) => (
@@ -289,7 +345,7 @@ const AddShifts = ({ toggle, page, pageSize, mode = 'create', defaultValues }: P
                             </Fragment>
                         ))}
                     </Grid>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
                         <IconButton
                             onClick={handleAdd}
                             size='small'
@@ -297,6 +353,9 @@ const AddShifts = ({ toggle, page, pageSize, mode = 'create', defaultValues }: P
                         >
                             <Icon icon='zondicons:add-outline' fontSize={25} />
                         </IconButton>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                        {errors.hrs && <FormHelperText sx={{ color: 'error.main' }}>{errors.hrs.message}</FormHelperText>}
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Button

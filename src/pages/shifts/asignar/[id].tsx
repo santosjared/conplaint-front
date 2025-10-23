@@ -8,16 +8,12 @@ import {
     Button,
     useTheme,
     IconButton,
-    Divider,
     CircularProgress,
 } from "@mui/material";
 import { useRouter } from "next/router";
-import { ChangeEvent, useEffect, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
 import { instance } from "src/configs/axios";
 import { UserType } from "src/types/types";
-import * as yup from "yup";
-import { yupResolver } from "@hookform/resolvers/yup";
 import Icon from "src/@core/components/icon";
 import AddPersonal from "./AddPersonal";
 import AddServices from "./AddServices";
@@ -38,6 +34,11 @@ interface ZoneType {
 }
 
 interface Services {
+    _id?: string
+    name: string;
+}
+
+interface GgradeType {
     _id?: string
     name: string;
 }
@@ -63,13 +64,14 @@ interface ShiftsType {
     createdAt?: string
     updatedAt?: string
     date: string;
-    supervisor: UserType | null;
+    grade?: GgradeType;
+    supervisor: string;
     hrs: HourRange[];
 }
 
 const defaultValues: ShiftsType = {
     date: "",
-    supervisor: null,
+    supervisor: '',
     hrs: [],
 };
 
@@ -152,7 +154,7 @@ const Asignar = () => {
         setLoading(true);
         const cleanedShift = {
             ...shift,
-            supervisor: shift?.supervisor?._id || null,
+            grade: shift.grade?._id || '',
             hrs: shift.hrs?.map(hour => ({
                 ...hour,
                 services: hour?.services?.map(service => ({
@@ -198,10 +200,8 @@ const Asignar = () => {
                         <CardContent>
                             <Box sx={{ mt: 4 }}>
                                 <Typography variant="h6" gutterBottom>
-                                    Supervisor:{" "}
-                                    {shift?.supervisor
-                                        ? `${shift.supervisor.grade} ${shift.supervisor.firstName} ${shift.supervisor.lastName || ""} ${shift.supervisor.paternalSurname || ""} ${shift.supervisor.maternalSurname || ""}`
-                                        : "No asignado"}
+                                    Supervisor: {`${shift?.grade?.name} `}
+                                    {shift?.supervisor || "No asignado"}
                                 </Typography>
                             </Box>
 
@@ -258,12 +258,12 @@ const Asignar = () => {
                                                                     </Grid>}
                                                                     {service?.zone?.name && <Grid item xs={4.5}>
                                                                         <Typography variant="subtitle2">
-                                                                            {user?.cargo ? user?.cargo : user?.user?.post || "Sin cargo"}
+                                                                            {user?.cargo ? user?.cargo : user?.user?.post?.name || "Sin cargo"}
                                                                         </Typography>
                                                                     </Grid>}
                                                                     <Grid item xs={service?.zone?.name ? 5 : 11}>
                                                                         <Typography variant="subtitle2">
-                                                                            {user?.user?.grade || ''} {user?.user?.firstName || "Sin nombre"} {user?.user?.lastName || ''} {user?.user?.paternalSurname || ''} {user?.user?.maternalSurname || ''}
+                                                                            {user?.user?.grade?.name || ''} {user?.user?.firstName || "Sin nombre"} {user?.user?.lastName || ''} {user?.user?.paternalSurname || ''} {user?.user?.maternalSurname || ''}
                                                                         </Typography>
                                                                     </Grid>
                                                                 </Grid>

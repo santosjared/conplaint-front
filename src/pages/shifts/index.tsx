@@ -7,11 +7,9 @@ import { useDispatch } from 'react-redux'
 import Icon from 'src/@core/components/icon'
 import AddDraw from 'src/components/draw'
 import { RootState, AppDispatch } from 'src/store'
-import { dowUser } from 'src/store/user'
 import { useSelector } from 'react-redux'
 import Swal from 'sweetalert2'
 import AddShits from './register'
-import { UserType } from 'src/types/types'
 import { deleteShit, fetchData } from 'src/store/shits'
 import { useRouter } from 'next/router'
 
@@ -23,10 +21,17 @@ interface HourRange {
     hrs_s: string
 }
 
+interface GradeType {
+    name: string;
+    _id: string;
+}
+
 interface ShiftsType {
     _id?: string
     date: string
-    supervisor: UserType | null
+    grade: GradeType
+    otherGrade: string
+    supervisor: string
     hrs: HourRange[]
 }
 
@@ -37,7 +42,9 @@ interface CellType {
 
 const defaultValues: ShiftsType = {
     date: today,
-    supervisor: null,
+    grade: { name: '', _id: '' },
+    otherGrade: '',
+    supervisor: '',
     hrs: [],
 }
 const Shifts = () => {
@@ -48,9 +55,21 @@ const Shifts = () => {
     const [field, setField] = useState<string>('')
     const [mode, setMode] = useState<'create' | 'edit'>('create')
     const [shitsData, setShitsData] = useState<ShiftsType>(defaultValues)
-    const [dateFilter, setDateFilter] = useState<string>('dd/mm/yyyy')
+    const [dateFilter, setDateFilter] = useState<string>('')
 
     const columns = [
+        {
+            flex: 0.2,
+            minWidth: 90,
+            field: 'grade',
+            sortable: false,
+            headerName: 'Grado del supervisor',
+            renderCell: ({ row }: CellType) => {
+                return (
+                    <Typography variant='body2' noWrap>{row.grade?.name || ''} </Typography>
+                )
+            }
+        },
         {
             flex: 0.2,
             minWidth: 90,
@@ -59,7 +78,7 @@ const Shifts = () => {
             headerName: 'Nombre del supervisor',
             renderCell: ({ row }: CellType) => {
                 return (
-                    <Typography variant='body2' noWrap>{row.supervisor?.firstName} {row.supervisor?.paternalSurname} {row.supervisor?.maternalSurname}</Typography>
+                    <Typography variant='body2' noWrap>{row.supervisor || ''} </Typography>
                 )
             }
         },
@@ -120,7 +139,7 @@ const Shifts = () => {
         }
 
         const handleEdit = () => {
-            setShitsData(shits)
+            setShitsData({ ...shits, otherGrade: '' })
             setMode('edit')
             setAnchorEl(null)
             toggleDrawer()
@@ -188,7 +207,7 @@ const Shifts = () => {
 
     const toggleDrawer = () => setDrawOpen(!drawOpen)
     const handleFilters = async () => {
-        dispatch(fetchData({ field, skip: page * pageSize, limit: pageSize }))
+        dispatch(fetchData({ field: field || dateFilter, skip: page * pageSize, limit: pageSize }))
     }
     const allData = async () => {
         dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
@@ -230,6 +249,7 @@ const Shifts = () => {
                                 type='date'
                                 name="search_date"
                                 autoComplete="off"
+                                InputLabelProps={{ shrink: true }}
                                 value={dateFilter}
                                 onChange={(e) => filterDate(e.target.value)}
                             />

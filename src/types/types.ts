@@ -1,3 +1,19 @@
+interface GradeType {
+    name: string
+    _id?: string
+}
+
+export type RolType = {
+    name: string,
+    description: string,
+    permissions?: Permission[],
+    _id?: string
+}
+
+export type PostType = {
+    name: string,
+    _id?: string
+}
 
 export type UserType = {
     lastName: string,
@@ -7,16 +23,17 @@ export type UserType = {
     phone: string,
     address: string,
     password: string,
-    rol: string
-    grade: string
+    rol: RolType
+    grade: GradeType
+    otherGrade?: string
     paternalSurname: string
     maternalSurname: string
     firstName: string
     exp: string
-    customPost?: string
-    post: string
+    post: PostType
+    otherPost?: string
+    status?: string
     _id?: string
-    __v?: string
 }
 
 interface Permission {
@@ -29,13 +46,6 @@ interface Permission {
         _id: string
         name: string
     }[]
-}
-export type RolType = {
-    name: string,
-    description: string,
-    permissions?: Permission[],
-    _id?: string
-    __v?: string
 }
 
 export type SubjectType = {

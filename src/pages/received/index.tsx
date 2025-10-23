@@ -2,22 +2,18 @@ import { Badge, Box, Button, Card, FormControl, Grid, IconButton, Menu, MenuItem
 import { Fragment, SyntheticEvent, useEffect, useState, MouseEvent } from "react";
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList'
-import TabPanel from '@mui/lab/TabPanel'
 import { useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "src/store";
 import { useSelector } from "react-redux";
 import { fetchData } from "src/store/clients/complaints";
-import ComplaintsClient from "src/views/clients/complints";
-import SearchComplaint from "src/views/clients/search";
-import { io } from 'socket.io-client'
-import environment from 'src/configs/environment'
 import Swal from 'sweetalert2';
 import { styled } from '@mui/material/styles'
 import { DataGrid } from "@mui/x-data-grid";
-import { format, isToday, isYesterday } from 'date-fns';
+import { format } from 'date-fns';
 import CustomChip from 'src/@core/components/mui/chip'
 import DetailsReceived from "./details";
 import Icon from "src/@core/components/icon";
+import { useRouter } from "next/router";
 
 interface Client {
     name: string
@@ -69,17 +65,13 @@ const RowOptions = ({ row }: CellType) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
     const rowOptionsOpen = Boolean(anchorEl)
 
+    const router = useRouter()
+
     const handleRowOptionsClick = (event: MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget)
     }
     const handleRowOptionsClose = () => {
         setAnchorEl(null)
-    }
-    const handleEdit = () => {
-        // setValue(complaint)
-        // setMode('edit')
-        setAnchorEl(null)
-        // toggle()
     }
     const handleRefuse = async () => {
         setAnchorEl(null)
@@ -117,7 +109,7 @@ const RowOptions = ({ row }: CellType) => {
                 }}
                 PaperProps={{ style: { minWidth: '8rem' } }}
             >
-                <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
+                <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={() => router.push(`/received/asigned/${row._id}`)}>
                     <Icon icon='mdi:account-hard-hat' fontSize={20} color='#00a0f4' />
                     Atender denuncia
                 </MenuItem>

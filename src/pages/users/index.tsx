@@ -14,32 +14,8 @@ import AddUser from './register'
 import { UserType } from 'src/types/types'
 import Swal from 'sweetalert2'
 
-interface TypeRol {
-    name: string
-    _id?: string
-}
-interface UsersType {
-    _id: string,
-    lastName: string,
-    gender: string,
-    email: string,
-    ci: string,
-    phone: string,
-    address: string,
-    password: string,
-    grade: string,
-    paternalSurname: string,
-    maternalSurname: string,
-    firstName: string,
-    exp: string,
-    customPost: string
-    post: string
-    status: string;
-    rol: TypeRol;
-}
-
 interface CellType {
-    row: UsersType
+    row: UserType
 }
 interface UserRoleType {
     [key: string]: { icon: string; color: string }
@@ -58,14 +34,15 @@ const defaultValues: UserType = {
     phone: '',
     address: '',
     password: '',
-    rol: '',
-    grade: '',
+    rol: { name: '', description: '' },
+    grade: { name: '', _id: '' },
     paternalSurname: '',
     maternalSurname: '',
     exp: '',
     firstName: '',
-    post: '',
-    customPost: ''
+    post: { name: '', _id: '' },
+    otherPost: '',
+    otherGrade: '',
 }
 const Users = () => {
 
@@ -85,7 +62,7 @@ const Users = () => {
             headerName: 'Grado',
             renderCell: ({ row }: CellType) => {
                 return (
-                    <Typography variant='body2' noWrap>{row.grade}</Typography>
+                    <Typography variant='body2' noWrap>{row.grade?.name}</Typography>
                 )
             }
         },
@@ -178,7 +155,7 @@ const Users = () => {
             sortable: false,
             headerName: 'Cargo actual',
             renderCell: ({ row }: CellType) => {
-                return (<Typography noWrap variant='body2'>{row.post}</Typography>)
+                return (<Typography noWrap variant='body2'>{row.post?.name}</Typography>)
             }
         },
         {
@@ -254,7 +231,7 @@ const Users = () => {
             }
         }
     ]
-    const RowOptions = ({ user }: { user: UsersType }) => {
+    const RowOptions = ({ user }: { user: UserType }) => {
 
         const dispatch = useDispatch<AppDispatch>()
         const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -301,11 +278,7 @@ const Users = () => {
 
 
         const handleEdit = () => {
-            setUserData({
-                ...user,
-                rol: user.rol?._id || '',
-                password: ''
-            })
+            setUserData({ ...user, otherGrade: '', otherPost: '' })
             setMode('edit')
             setAnchorEl(null)
             toggleDrawer()
@@ -354,6 +327,7 @@ const Users = () => {
     const dispatch = useDispatch<AppDispatch>()
 
     const store = useSelector((state: RootState) => state.user)
+
     useEffect(() => {
         dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
     }, [pageSize, page])

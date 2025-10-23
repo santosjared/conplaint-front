@@ -1,9 +1,9 @@
-import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, FormControl, Grid, IconButton, MenuItem, Select, TextField, Typography } from "@mui/material";
+import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
 import { forwardRef, Fragment, useEffect, useState } from "react";
 import Icon from "src/@core/components/icon";
 import Fade, { FadeProps } from '@mui/material/Fade'
 import { ReactElement, Ref } from "react";
-import { UserType } from "src/types/types";
+import { PostType, UserType } from "src/types/types";
 import { instance } from "src/configs/axios";
 
 interface User {
@@ -17,6 +17,11 @@ interface ZoneType {
 }
 
 interface Services {
+    _id?: string
+    name: string;
+}
+
+interface GradeType {
     _id?: string
     name: string;
 }
@@ -39,7 +44,7 @@ interface HourRange {
 interface ShiftsType {
     _id?: string;
     date: string;
-    supervisor: UserType | null;
+    supervisor: string;
     hrs: HourRange[];
 }
 
@@ -64,7 +69,9 @@ const AddPersonal = ({ open, toggle, shift, setShift, indexHr, indexService }: P
     const [field, setField] = useState<string>('');
     const [cargo, setCargo] = useState<string>('');
     const [userAvailable, setUserAvailable] = useState<UserType[]>([]);
+    const [users, setUsers] = useState<UserType[]>([])
     const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+    const [posts, setPosts] = useState<PostType[]>([])
 
     const hrs = shift?.hrs?.[indexHr] || [];
 
@@ -83,6 +90,7 @@ const AddPersonal = ({ open, toggle, shift, setShift, indexHr, indexService }: P
                     currentServiceUserIds.includes(user._id) || !allAssignedUserIds.includes(user._id)
                 );
                 setUserAvailable(users);
+                setUsers(users)
                 setSelectedUsers(currentServiceUserIds as string[]);
             } catch (error) {
                 console.error("Error fetching users:", error);
@@ -90,7 +98,20 @@ const AddPersonal = ({ open, toggle, shift, setShift, indexHr, indexService }: P
         };
 
         fetchUsers();
-    }, [hrs, open, indexService]);
+    }, [hrs, open, indexService, toggle]);
+
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            try {
+                const response = await instance.get('/users/posts');
+                setPosts([...response.data, { name: 'TODOS', _id: '' }]);
+            } catch (e) {
+                console.log(e)
+            }
+        }
+        fetchPosts();
+    }, [hrs, open, indexService, toggle]);
 
 
 
@@ -100,7 +121,7 @@ const AddPersonal = ({ open, toggle, shift, setShift, indexHr, indexService }: P
         return userAvailable.filter(user => {
             const fullName = `${user.grade} ${user.firstName} ${user.lastName || ''} ${user.paternalSurname || ''} ${user.maternalSurname || ''}`.toLowerCase();
             const matchesField = fullName.includes(field.toLowerCase());
-            const matchesCargo = cargo ? user.post === cargo : true;
+            const matchesCargo = cargo ? user.post?._id === cargo : true;
             const isAlreadyAssigned = serviceUsers.some(u => u.user._id === user._id);
 
             return matchesField && matchesCargo && !isAlreadyAssigned;
@@ -163,34 +184,39 @@ const AddPersonal = ({ open, toggle, shift, setShift, indexHr, indexService }: P
                                     value={field}
                                     autoComplete='off'
                                     label='Buscar personal'
-                                    onChange={e => { setField(e.target.value); setUserAvailable(handleFilter(e.target.value, cargo)); }}
+                                    onChange={e => { setField(e.target.value); setUsers(handleFilter(e.target.value, cargo)); }}
                                     placeholder='John Doe'
                                 />
                             </FormControl>
                         </Grid>
                         <Grid item xs={4}>
-                            <Select
-                                labelId="post-select"
-                                id="select-post"
-                                label="Cargo"
-                                value={cargo}
-                                onChange={e => { setCargo(e.target.value); setUserAvailable(handleFilter(field, e.target.value)); }}
-                            >
-                                <MenuItem value='COMANDANTE'>COMANDANTE</MenuItem>
-                                <MenuItem value='SUB COMANDANTE'>SUB COMANDANTE</MenuItem>
-                                <MenuItem value='OPERADOR'>OPERADOR</MenuItem>
-                                <MenuItem value='PATRULLERO'>PATRULLERO</MenuItem>
-                                <MenuItem value='CONDUCTOR'>CONDUCTOR</MenuItem>
-                                <MenuItem value='SECRETARIA'>SECRETARIA</MenuItem>
-                                <MenuItem value='MONITOREO DE CAMARAS'>MONITOREO DE CAMARAS</MenuItem>
-                                <MenuItem value='DESPACHADOR'>DESPACHADOR</MenuItem>
-                                <MenuItem value='RECEPCIONISTA'>RECEPCIONISTA</MenuItem>
-                            </Select>
+                            <FormControl fullWidth>
+                                <InputLabel id="post-select">Cargo</InputLabel>
+                                <Select
+                                    labelId="post-select"
+                                    id="select-post"
+                                    value={cargo}
+                                    label="Cargo"
+                                    onChange={e => {
+                                        setCargo(e.target.value);
+                                        setUsers(handleFilter(field, e.target.value));
+                                    }}
+                                >
+                                    {posts.map((value) => (
+                                        <MenuItem
+                                            value={value._id || ''}
+                                            key={value._id}
+                                        >
+                                            {value.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
                         </Grid>
                     </Grid>
                 </Box>
 
-                {userAvailable.map((user, index) => (
+                {users.map((user, index) => (
                     <Grid container key={index} spacing={2} alignItems="center">
                         <Grid item xs={1}>
                             <Checkbox
@@ -199,11 +225,11 @@ const AddPersonal = ({ open, toggle, shift, setShift, indexHr, indexService }: P
                             />
                         </Grid>
                         <Grid item xs={4}>
-                            <Typography variant="body1">{user.post}</Typography>
+                            <Typography variant="body1">{user.post?.name}</Typography>
                         </Grid>
                         <Grid item xs={7}>
                             <Typography variant="body1">
-                                {user.grade} {user.firstName} {user.lastName || ''} {user.paternalSurname || ''} {user.maternalSurname || ''}
+                                {user.grade?.name} {user.firstName} {user.lastName || ''} {user.paternalSurname || ''} {user.maternalSurname || ''}
                             </Typography>
                         </Grid>
                     </Grid>

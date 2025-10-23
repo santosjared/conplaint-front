@@ -10,8 +10,13 @@ import { AppDispatch } from "src/store";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup'
 import { instance } from "src/configs/axios";
-import { UserType } from "src/types/types";
+import { PostType, RolType, UserType } from "src/types/types";
 import { addUser, updateUser } from "src/store/user";
+
+interface GradeType {
+    name: string;
+    _id: string;
+}
 
 interface Props {
     toggle: () => void;
@@ -36,13 +41,19 @@ const showErrors = (field: string, valueLen: number, min: number) => {
 const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Props) => {
 
     const [showPassword, setShowPassword] = useState(false)
-    const [roles, setRoles] = useState<any[]>([])
+    const [roles, setRoles] = useState<RolType[]>([])
+    const [grades, setGrades] = useState<GradeType[]>([])
+    const [posts, setPosts] = useState<PostType[]>([])
+
     const checkemail = defaultValues?.email
 
     const theme = useTheme()
 
     const schema = yup.object().shape({
-        grade: yup.string().required('El campo grado es requerido'),
+        grade: yup.object({
+            _id: yup.string().required('El campo grado es requerido'),
+            name: yup.string().required('El campo grado es requerido'),
+        }).required('El campo grado es requerido'),
         paternalSurname: yup.string()
             .transform(value => (value === '' ? undefined : value))
             .min(4, 'El campo apellido paterno debe tener al menos 4 caracteres')
@@ -65,7 +76,10 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
         ci: yup.string().required('El campo ci es requerido')
             .min(7, obj => showErrors('ci', obj.value.length, obj.min)),
         exp: yup.string().required('Seleccione la expedición del carnet'),
-        post: yup.string().required('Seleccione algún cargo'),
+        post: yup.object({
+            _id: yup.string().required('El campo cargo es requerido'),
+            name: yup.string().required('El campo cargo es requerido'),
+        }).required('El campo cargo es requerido'),
         customPost: yup.string().when('post', {
             is: 'other',
             then: (schema) => schema.required('Especifique otro cargo, por favor'),
@@ -91,7 +105,24 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                 .min(8, 'El campo contraseña debe tener al menos 8 caracteres')
                 .notRequired(),
         gender: yup.string().required('El campo sexo es obligatorio'),
-        rol: yup.string().required('Debe seleccionar algun rol')
+        rol: yup.object({
+            _id: yup.string().required('El campo rol es requerido'),
+            name: yup.string().required('El campo rol es requerido'),
+        }).required('El campo rol es requerido'),
+        otherGrade: yup
+            .string()
+            .when('grade', {
+                is: (val: GradeType | null) => val?.name === 'Otro',
+                then: schema => schema.required('Debe especificar otro tipo de grado'),
+                otherwise: schema => schema.notRequired()
+            }),
+        otherPost: yup
+            .string()
+            .when('post', {
+                is: (val: PostType | null) => val?.name === 'Otro',
+                then: schema => schema.required('Debe especificar otro tipo de cargo'),
+                otherwise: schema => schema.notRequired()
+            }),
 
     })
 
@@ -110,6 +141,7 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
         resolver: yupResolver(schema)
     })
     const selectedPost = watch('post');
+    const otherGrade = watch('grade');
 
     useEffect(() => {
         const fetchRol = async () => {
@@ -122,20 +154,45 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
 
         }
         fetchRol();
-    }, [toggle]);
+    }, [mode, defaultValues, toggle]);
+
+    useEffect(() => {
+        const fetchGrades = async () => {
+            try {
+                const response = await instance.get('/users/grades');
+                setGrades([...response.data, { name: 'Otro', _id: 'other' }]);
+            } catch (e) {
+                console.log(e)
+            }
+
+        }
+        fetchGrades();
+    }, [mode, defaultValues, toggle]);
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            try {
+                const response = await instance.get('/users/posts');
+                setPosts([...response.data, { name: 'Otro', _id: 'other' }]);
+            } catch (e) {
+                console.log(e)
+            }
+        }
+        fetchPosts();
+    }, [mode, defaultValues, toggle]);
 
     useEffect(() => {
         reset(defaultValues)
     }, [defaultValues, mode])
 
-
     const onSubmit = async (data: UserType) => {
         try {
             const modifiedData = {
                 ...data,
-                post: data.post === 'other' ? data.customPost : data.post,
+                post: data.post._id || '',
+                grade: data.grade._id || '',
+                rol: data.rol._id || ''
             };
-            delete modifiedData.customPost;
 
             if (mode === 'edit' && defaultValues?._id) {
                 if (data.email !== checkemail) {
@@ -150,7 +207,6 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                 }
 
                 delete modifiedData._id;
-                delete modifiedData.__v;
 
                 await dispatch(updateUser({
                     data: modifiedData,
@@ -195,44 +251,49 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                             <Controller
                                 name="grade"
                                 control={control}
-                                render={({ field }) => (
+                                render={({ field: { value, onChange } }) => (
                                     <Select
-                                        {...field}
                                         labelId="grade-select"
                                         id="select-grade"
                                         label="Grado"
                                         error={Boolean(errors.grade)}
+                                        value={value?._id ?? ''}
+                                        onChange={(e) => {
+                                            const selectedId = e.target.value as string
+                                            const selectedGrade = grades.find((grade) => grade._id === selectedId) || null
+                                            onChange(selectedGrade)
+                                        }}
                                     >
-                                        <MenuItem value='CNL. MSc. CAD.'>
-                                            CNL. MSc. CAD.
-                                        </MenuItem>
-                                        <MenuItem value='TTE.'>
-                                            TTE.
-                                        </MenuItem>
-                                        <MenuItem value='SBTTE.'>
-                                            SBTTE.
-                                        </MenuItem>
-                                        <MenuItem value='SOF. 2DO'>
-                                            SOF. 2DO
-                                        </MenuItem>
-                                        <MenuItem value='SGTO. MY.'>
-                                            SGTO. MY.
-                                        </MenuItem>
-                                        <MenuItem value='SGTO. 1RO.'>
-                                            SGTO. 1RO.
-                                        </MenuItem>
-                                        <MenuItem value='SGTO. 2DO.'>
-                                            SGTO. 2DO.
-                                        </MenuItem>
-                                        <MenuItem value='SGTO.'>
-                                            SGTO.
-                                        </MenuItem>
+                                        {grades.map((value) => (<MenuItem
+                                            value={value._id || ''}
+                                            key={value._id}
+                                        >{value.name}</MenuItem>))}
                                     </Select>
                                 )}
                             />
-                            {errors.grade && <FormHelperText sx={{ color: 'error.main' }}>{errors.grade.message}</FormHelperText>}
+                            {errors.grade && <FormHelperText sx={{ color: 'error.main' }}>{errors.grade?.message || errors.grade.name?.message || errors.grade._id?.message}</FormHelperText>}
                         </FormControl>
                     </Grid>
+                    {otherGrade?.name == 'Otro' &&
+                        <Grid item xs={6}>
+                            <FormControl fullWidth sx={{ mb: 3 }}>
+                                <Controller
+                                    name="otherGrade"
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field: { value, onChange } }) => (
+                                        <TextField
+                                            label='Especifica otro grado'
+                                            onChange={(e) => onChange(e.target.value.toUpperCase())}
+                                            error={Boolean(errors.otherGrade)}
+                                            value={value}
+                                        />
+                                    )}
+                                />
+                                {errors.otherGrade && <FormHelperText sx={{ color: 'error.main' }}>{errors.otherGrade.message}</FormHelperText>}
+                            </FormControl>
+                        </Grid>
+                    }
                     <Grid item xs={6}>
                         <FormControl fullWidth sx={{ mb: 6 }}>
                             <Controller
@@ -323,10 +384,10 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                                         label="Género"
                                         error={Boolean(errors.gender)}
                                     >
-                                        <MenuItem value='M'>
+                                        <MenuItem value='Masculino'>
                                             Masculino
                                         </MenuItem>
-                                        <MenuItem value='F'>
+                                        <MenuItem value='Femenino'>
                                             Femenino
                                         </MenuItem>
                                     </Select>
@@ -408,48 +469,47 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                                 name="post"
                                 control={control}
                                 rules={{ required: 'Este campo es requerido' }}
-                                render={({ field }) => (
+                                render={({ field: { value, onChange } }) => (
                                     <Select
-                                        {...field}
                                         labelId="post-select"
                                         id="select-post"
                                         label="Cargo Actual"
                                         error={Boolean(errors.post)}
+                                        value={value?._id ?? ''}
+                                        onChange={(e) => {
+                                            const selectedId = e.target.value as string
+                                            const selectedPost = posts.find((post) => post._id === selectedId) || null
+                                            onChange(selectedPost)
+                                        }}
                                     >
-                                        <MenuItem value='COMANDANTE'>COMANDANTE</MenuItem>
-                                        <MenuItem value='SUB COMANDANTE'>SUB COMANDANTE</MenuItem>
-                                        <MenuItem value='OPERADOR'>OPERADOR</MenuItem>
-                                        <MenuItem value='PATRULLERO'>PATRULLERO</MenuItem>
-                                        <MenuItem value='CONDUCTOR'>CONDUCTOR</MenuItem>
-                                        <MenuItem value='SECRETARIA'>SECRETARIA</MenuItem>
-                                        <MenuItem value='MONITOREO DE CAMARAS'>MONITOREO DE CAMARAS</MenuItem>
-                                        <MenuItem value='DESPACHADOR'>DESPACHADOR</MenuItem>
-                                        <MenuItem value='RECEPCIONISTA'>RECEPCIONISTA</MenuItem>
-                                        <MenuItem value='other'>OTRO</MenuItem>
+                                        {posts.map((value) => (<MenuItem
+                                            value={value._id || ''}
+                                            key={value._id}
+                                        >{value.name}</MenuItem>))}
                                     </Select>
                                 )}
                             />
                             {errors.post && <FormHelperText sx={{ color: 'error.main' }}>{errors.post.message}</FormHelperText>}
                         </FormControl>
                     </Grid>
-                    {selectedPost === 'other' && (
+                    {selectedPost?.name === 'Otro' && (
                         <Grid item xs={6}>
                             <FormControl fullWidth sx={{ mb: 6 }}>
                                 <Controller
-                                    name="customPost"
+                                    name="otherPost"
                                     control={control}
                                     rules={{ required: true }}
                                     render={({ field: { value, onChange } }) => (
                                         <TextField
                                             label='Otro cargo'
                                             placeholder='Especificar cargo'
-                                            onChange={onChange}
-                                            error={Boolean(errors.customPost)}
+                                            onChange={(e) => onChange(e.target.value.toUpperCase())}
+                                            error={Boolean(errors.otherPost)}
                                             value={value}
                                         />
                                     )}
                                 />
-                                {errors.customPost && <FormHelperText sx={{ color: 'error.main' }}>{errors.customPost.message}</FormHelperText>}
+                                {errors.otherPost && <FormHelperText sx={{ color: 'error.main' }}>{errors.otherPost.message}</FormHelperText>}
                             </FormControl>
                         </Grid>)}
                     <Grid item xs={6}>
@@ -549,13 +609,18 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                             <Controller
                                 name="rol"
                                 control={control}
-                                render={({ field }) => (
+                                render={({ field: { value, onChange } }) => (
                                     <Select
-                                        {...field}
                                         labelId="role-select"
                                         id="select-role"
                                         label="Rol"
                                         error={Boolean(errors.rol)}
+                                        value={value?._id ?? ''}
+                                        onChange={(e) => {
+                                            const selectedId = e.target.value as string
+                                            const selectedRol = roles.find((rol) => rol._id === selectedId) || null
+                                            onChange(selectedRol)
+                                        }}
                                     >
                                         {roles.map((value) => (<MenuItem
                                             value={value._id}

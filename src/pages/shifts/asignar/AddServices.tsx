@@ -42,7 +42,7 @@ interface HourRange {
 interface ShiftsType {
     _id?: string;
     date: string;
-    supervisor: UserType | null;
+    supervisor: string;
     hrs: HourRange[];
 }
 
