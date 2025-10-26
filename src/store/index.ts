@@ -6,6 +6,7 @@ import complaintsClient from './clients/complaints';
 import auth from './auth';
 import shits from './shits';
 import patrols from './patrols';
+import atendidos from './atendidos'
 
 export const store = configureStore({
     reducer: {
@@ -15,7 +16,8 @@ export const store = configureStore({
         complaintsClient,
         auth,
         shits,
-        patrols
+        patrols,
+        atendidos,
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({

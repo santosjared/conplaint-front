@@ -20,6 +20,7 @@ import Icon from 'src/@core/components/icon'
 interface User {
     cargo?: string
     user: UserType
+    _id: string
 }
 
 interface ZoneType {
@@ -63,8 +64,8 @@ interface ShiftsType {
 interface AddPersonalType {
     toggle: () => void
     open: boolean
-    onSelect: (users: UserType[]) => void
-    tabs: { user?: UserType[] }[]
+    onSelect: (users: User[]) => void
+    tabs: { user?: User[] }[]
     currentIndex: number
 }
 
@@ -79,7 +80,6 @@ const AddPersonal = ({ open, toggle, onSelect, tabs, currentIndex }: AddPersonal
     const [shifts, setShifts] = useState<ShiftsType[]>([])
     const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
 
-    // 🔒 Usuarios ya asignados en otras pestañas (menos el actual)
     const assignedUsers = useMemo(() => {
         return new Set(
             tabs
@@ -90,7 +90,6 @@ const AddPersonal = ({ open, toggle, onSelect, tabs, currentIndex }: AddPersonal
         )
     }, [tabs, currentIndex])
 
-    // Preselecciona usuarios del tab actual
     const currentUsers = useMemo(() => {
         return new Set(
             (tabs[currentIndex]?.user || [])
@@ -124,12 +123,12 @@ const AddPersonal = ({ open, toggle, onSelect, tabs, currentIndex }: AddPersonal
     }
 
     const handleSelect = useCallback(() => {
-        const selectedUserList: UserType[] = []
+        const selectedUserList: User[] = []
 
         shifts.forEach(shift => {
             shift.hrs.forEach(hour => {
                 hour.services.forEach(service => {
-                    service.users.forEach(({ user }) => {
+                    service.users.forEach((user) => {
                         if (selectedUsers.has(user._id || '')) {
                             selectedUserList.push(user)
                         }
@@ -194,8 +193,8 @@ const AddPersonal = ({ open, toggle, onSelect, tabs, currentIndex }: AddPersonal
 
                                                     <Grid item xs={12}>
                                                         {service?.users
-                                                            ?.filter(({ user }) => !assignedUsers.has(user._id || ''))
-                                                            ?.map(({ user, cargo }, idx) => {
+                                                            ?.filter((user) => !assignedUsers.has(user._id || ''))
+                                                            ?.map((user, idx) => {
                                                                 const userId = user._id || ''
                                                                 return (
                                                                     <Grid container spacing={1} key={idx}>
@@ -208,15 +207,15 @@ const AddPersonal = ({ open, toggle, onSelect, tabs, currentIndex }: AddPersonal
                                                                         {service?.zone?.name && (
                                                                             <Grid item xs={4.5}>
                                                                                 <Typography variant='subtitle2'>
-                                                                                    {cargo || user?.post?.name || 'Sin cargo'}
+                                                                                    {user.cargo || user?.user?.post?.name || 'Sin cargo'}
                                                                                 </Typography>
                                                                             </Grid>
                                                                         )}
                                                                         <Grid item xs={service?.zone?.name ? 5 : 11}>
                                                                             <Typography variant='subtitle2'>
-                                                                                {user?.grade?.name || ''} {user?.firstName || ''}{' '}
-                                                                                {user?.lastName || ''} {user?.paternalSurname || ''}{' '}
-                                                                                {user?.maternalSurname || ''}
+                                                                                {user?.user?.grade?.name || ''} {user?.user?.firstName || ''}{' '}
+                                                                                {user?.user?.lastName || ''} {user?.user?.paternalSurname || ''}{' '}
+                                                                                {user?.user?.maternalSurname || ''}
                                                                             </Typography>
                                                                         </Grid>
                                                                     </Grid>

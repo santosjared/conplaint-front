@@ -5,7 +5,7 @@ import TabList from '@mui/lab/TabList'
 import { useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "src/store";
 import { useSelector } from "react-redux";
-import { fetchData } from "src/store/clients/complaints";
+import { fetchData, refusedComplaints } from "src/store/clients/complaints";
 import Swal from 'sweetalert2';
 import { styled } from '@mui/material/styles'
 import { DataGrid } from "@mui/x-data-grid";
@@ -59,68 +59,6 @@ const ItemTab = styled(Tab)<TabProps>(({ theme }) => ({
 }));
 
 
-const RowOptions = ({ row }: CellType) => {
-
-    const dispatch = useDispatch<AppDispatch>()
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-    const rowOptionsOpen = Boolean(anchorEl)
-
-    const router = useRouter()
-
-    const handleRowOptionsClick = (event: MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget)
-    }
-    const handleRowOptionsClose = () => {
-        setAnchorEl(null)
-    }
-    const handleRefuse = async () => {
-        setAnchorEl(null)
-        const confirme = await Swal.fire({
-            title: '¿Estas seguro de rechazar la denuncia?',
-            icon: "warning",
-            showCancelButton: true,
-            cancelButtonColor: "#3085d6",
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ff4040',
-            confirmButtonText: 'Si',
-        }).then(async (result) => { return result.isConfirmed });
-        if (confirme) {
-            // dispatch(refusedComplaints({ skip, limit, status, _id }))
-        }
-    }
-
-    return (
-        <>
-            <IconButton size='small' onClick={handleRowOptionsClick}>
-                <Icon icon='mdi:dots-vertical' />
-            </IconButton>
-            <Menu
-                keepMounted
-                anchorEl={anchorEl}
-                open={rowOptionsOpen}
-                onClose={handleRowOptionsClose}
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right'
-                }}
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right'
-                }}
-                PaperProps={{ style: { minWidth: '8rem' } }}
-            >
-                <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={() => router.push(`/received/asigned/${row._id}`)}>
-                    <Icon icon='mdi:account-hard-hat' fontSize={20} color='#00a0f4' />
-                    Atender denuncia
-                </MenuItem>
-                {row.status !== 'refused' && <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleRefuse}>
-                    <Icon icon='mdi:remove-bold' fontSize={20} color='#ff4040' />
-                    Rechazar denuncia
-                </MenuItem>}
-            </Menu>
-        </>
-    )
-}
 
 const Recibidos = () => {
 
@@ -147,6 +85,69 @@ const Recibidos = () => {
     }
     const search = (data: string) => {
         dispatch(fetchData({ status: activeTab !== 'all' ? activeTab : '', field: data, skip: page * pageSize, limit: pageSize }))
+    }
+
+    const RowOptions = ({ row }: CellType) => {
+
+        const dispatch = useDispatch<AppDispatch>()
+        const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+        const rowOptionsOpen = Boolean(anchorEl)
+
+        const router = useRouter()
+
+        const handleRowOptionsClick = (event: MouseEvent<HTMLElement>) => {
+            setAnchorEl(event.currentTarget)
+        }
+        const handleRowOptionsClose = () => {
+            setAnchorEl(null)
+        }
+        const handleRefuse = async () => {
+            setAnchorEl(null)
+            const confirme = await Swal.fire({
+                title: '¿Estas seguro de rechazar la denuncia?',
+                icon: "warning",
+                showCancelButton: true,
+                cancelButtonColor: "#3085d6",
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#ff4040',
+                confirmButtonText: 'Si',
+            }).then(async (result) => { return result.isConfirmed });
+            if (confirme) {
+                dispatch(refusedComplaints({ status: activeTab !== 'all' ? activeTab : '', skip: page * pageSize, limit: pageSize, id: row._id || '' }))
+            }
+        }
+
+        return (
+            <>
+                {row.status !== 'acepted' && <><IconButton size='small' onClick={handleRowOptionsClick}>
+                    <Icon icon='mdi:dots-vertical' />
+                </IconButton>
+                    <Menu
+                        keepMounted
+                        anchorEl={anchorEl}
+                        open={rowOptionsOpen}
+                        onClose={handleRowOptionsClose}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'right'
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right'
+                        }}
+                        PaperProps={{ style: { minWidth: '8rem' } }}
+                    >
+                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={() => router.push(`/received/asigned/${row._id}`)}>
+                            <Icon icon='mdi:account-hard-hat' fontSize={20} color='#00a0f4' />
+                            Atender denuncia
+                        </MenuItem>
+                        {row.status !== 'refused' && <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleRefuse}>
+                            <Icon icon='mdi:remove-bold' fontSize={20} color='#ff4040' />
+                            Rechazar denuncia
+                        </MenuItem>}
+                    </Menu></>}
+            </>
+        )
     }
 
     const columns = [
@@ -261,9 +262,10 @@ const Recibidos = () => {
         }
     ]
 
+
     return (
         <Fragment>
-            {openDetails && dataDetails ? (<DetailsReceived data={dataDetails} toggle={toggleDetails} />)
+            {openDetails && dataDetails ? (<DetailsReceived data={dataDetails} toggle={toggleDetails} page={page} pageSize={pageSize} activeTab={activeTab} />)
                 :
                 (<Grid container spacing={4}>
                     <Grid item xs={12}>

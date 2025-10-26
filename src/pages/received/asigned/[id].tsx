@@ -31,6 +31,12 @@ import Swal from 'sweetalert2'
 import { instance } from 'src/configs/axios'
 import { useRouter } from 'next/router'
 
+interface User {
+    cargo?: string
+    user: UserType
+    _id: string
+}
+
 interface MarkerType {
     _id?: string
     name: string
@@ -53,7 +59,7 @@ interface VehicleType {
 interface TabsType {
     label: string
     patrols?: VehicleType
-    user?: UserType[]
+    user?: User[]
 }
 
 const defaultValue: TabsType = {
@@ -126,10 +132,11 @@ const MenuAsigned = () => {
         togglePatrols()
     }
 
-    const handleSelectUsers = (users: UserType[]) => {
+    const handleSelectUsers = (users: User[]) => {
         const index = parseInt(activeTab)
         const newTabs = [...tabs]
         newTabs[index] = { ...newTabs[index], user: users }
+        console.log(users)
         setTabs(newTabs)
         togglePersonal()
     }
@@ -171,14 +178,15 @@ const MenuAsigned = () => {
             try {
                 const data = {
                     complaint: id,
-                    patrols: newdata
+                    userpatrol: newdata
                 };
-                const response = await instance.post('/complait/asigned', data);
+                const response = await instance.post('/atendidos', data);
                 await Swal.fire({
                     title: '¡Guardado exitosamente!',
                     text: 'Las patrullas fueron asignadas correctamente.',
                     icon: 'success',
                 });
+                router.back();
             } catch (error) {
                 console.error('Error al guardar:', error);
                 Swal.fire({
@@ -327,7 +335,7 @@ const MenuAsigned = () => {
                                                             </TableRow>
                                                         </TableHead>
                                                         <TableBody>
-                                                            {tab.user.map((user, index) => (
+                                                            {tab.user.map(({ user }, index) => (
                                                                 <TableRow key={index}>
                                                                     <TableCell align='center'>{user.grade?.name}</TableCell>
                                                                     <TableCell align='center'>{user.paternalSurname}</TableCell>

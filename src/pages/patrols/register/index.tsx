@@ -133,7 +133,7 @@ const AddVehicle = ({ toggle, mode = 'create', defaultValues, page, pageSize }: 
         } else {
             setPreview(defaultValues?.imageUrl || null)
         }
-    }, [defaultValues, mode])
+    }, [defaultValues, mode, toggle, page, pageSize])
 
     useEffect(() => {
 
@@ -143,7 +143,7 @@ const AddVehicle = ({ toggle, mode = 'create', defaultValues, page, pageSize }: 
             setMarker([...data, { _id: 'other', name: 'Otro' }]);
         };
         fetchMarkers();
-    }, [mode]);
+    }, [defaultValues, mode, toggle, page, pageSize]);
 
     useEffect(() => {
         const fetchTypes = async () => {
@@ -152,7 +152,7 @@ const AddVehicle = ({ toggle, mode = 'create', defaultValues, page, pageSize }: 
             setType([...data, { _id: 'other', name: 'Otro' }]);
         };
         fetchTypes();
-    }, [mode]);
+    }, [defaultValues, mode, toggle, page, pageSize]);
 
     const uploadFile = watch('image')
     const otherMarker = watch('marker')

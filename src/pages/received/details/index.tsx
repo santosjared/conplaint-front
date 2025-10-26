@@ -3,10 +3,15 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import { Box, Button, ButtonGroup, Card, CardContent, Divider, Grid, IconButton, Tab, Typography } from "@mui/material";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import Icon from 'src/@core/components/icon'
 import { ImageContainer } from 'src/components/image-container';
 import getConfig from 'src/configs/environment'
+import { AppDispatch } from "src/store";
+import { refusedComplaints } from "src/store/clients/complaints";
+import Swal from 'sweetalert2';
 
 interface Client {
     name: string
@@ -41,6 +46,9 @@ interface DataType {
 
 interface DetailsReceivedProps {
     data: DataType | null
+    page: number
+    pageSize: number
+    activeTab: string
     toggle: () => void
 }
 
@@ -49,12 +57,29 @@ const MapLocation = (dynamic(() => import('src/components/maps'), {
     ssr: false,
 }))
 
-const DetailsReceived = ({ data, toggle }: DetailsReceivedProps) => {
+const DetailsReceived = ({ data, toggle, page, pageSize, activeTab }: DetailsReceivedProps) => {
     const [value, setValue] = useState('1');
+
+    const router = useRouter()
+    const dispatch = useDispatch<AppDispatch>()
 
     const handleChange = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
     };
+    const handleRefuse = async () => {
+        const confirme = await Swal.fire({
+            title: '¿Estas seguro de rechazar la denuncia?',
+            icon: "warning",
+            showCancelButton: true,
+            cancelButtonColor: "#3085d6",
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ff4040',
+            confirmButtonText: 'Si',
+        }).then(async (result) => { return result.isConfirmed });
+        if (confirme) {
+            dispatch(refusedComplaints({ status: activeTab !== 'all' ? activeTab : '', skip: page * pageSize, limit: pageSize, id: data?._id || '' }))
+        }
+    }
     return (
         <Box sx={{ backgroundColor: theme => theme.palette.background.paper, p: 4, borderRadius: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'end', mb: 4 }}>
@@ -159,10 +184,10 @@ const DetailsReceived = ({ data, toggle }: DetailsReceivedProps) => {
                 </Grid>
                 <Grid item xs={12}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                        <ButtonGroup variant="outlined" aria-label="Basic button group">
-                            <Button color="error" disabled={data?.status === 'refused'}>Rechazar</Button>
-                            <Button color="success" disabled={data?.status === 'accepted'}>Atender</Button>
-                        </ButtonGroup>
+                        {data?.status !== 'acepted' && <ButtonGroup variant="outlined" aria-label="Basic button group">
+                            <Button color="error" disabled={data?.status === 'refused' || data?.status === 'acepted'}>Rechazar</Button>
+                            <Button color="success" disabled={data?.status === 'acepted'} onClick={() => router.push(`/received/asigned/${data?._id}`)}>Atender</Button>
+                        </ButtonGroup>}
                         <Button variant="contained" color="info" onClick={toggle}>Aceptar</Button>
                     </Box>
                 </Grid>

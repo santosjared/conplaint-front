@@ -15,7 +15,7 @@ interface Props {
 }
 
 interface RefuseProps extends Props {
-    _id: string
+    id: string
 }
 export const fetchData = createAsyncThunk('complaintsClient/fetchData',
     async (filters: { [key: string]: any }) => {
@@ -26,9 +26,9 @@ export const fetchData = createAsyncThunk('complaintsClient/fetchData',
     }
 );
 
-export const refusedComplaints = createAsyncThunk('complaintsClient/refusedComplaints', async ({ status, skip, limit, _id }: RefuseProps, { dispatch }: Redux) => {
+export const refusedComplaints = createAsyncThunk('complaintsClient/refusedComplaints', async ({ status, skip, limit, id }: RefuseProps, { dispatch }: Redux) => {
     try {
-        const response = await instance.delete(`/complaints-client/complaints-refused/${_id}`);
+        const response = await instance.delete(`/complaints-client/complaints-refused/${id}`);
         dispatch(fetchData({ status, skip, limit }))
         return response.data
     } catch (e) {

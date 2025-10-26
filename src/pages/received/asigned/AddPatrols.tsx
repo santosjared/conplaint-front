@@ -23,6 +23,12 @@ import { instance } from 'src/configs/axios'
 import baseUrl from 'src/configs/environment'
 import { UserType } from 'src/types/types'
 
+interface User {
+    cargo?: string
+    user: UserType
+    _id: string
+}
+
 interface MarkerType {
     _id?: string
     name: string
@@ -45,7 +51,7 @@ interface VehicleType {
 interface TabsType {
     label: string
     patrols?: VehicleType
-    user?: UserType[]
+    user?: User[]
 }
 
 interface AddVehicleType {

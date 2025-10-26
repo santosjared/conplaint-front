@@ -6,7 +6,6 @@ import { useDispatch } from 'react-redux'
 import { AppDispatch } from "src/store"
 import { Controller, useForm } from "react-hook-form"
 import { yupResolver } from '@hookform/resolvers/yup'
-import { RolType } from "src/types/types"
 import { addRol, updateRol } from "src/store/role"
 import { Rol } from "src/context/types"
 
