@@ -10,6 +10,35 @@ import Icon from "src/@core/components/icon";
 import { fetchData, updateAtendios } from "src/store/atendidos";
 import { UserType } from "src/types/types";
 import DetailAsigned from "./details";
+import Denuncia from "./denuncia";
+
+interface ComplaintType {
+    name: string
+    image: string
+    description: string
+    _id: string
+}
+
+interface Infractor {
+    apellido_paterno: string
+    apellido_materno: string
+    nombres: string
+    ci: string
+    edad: number
+    ocupation: string
+    alias: string
+}
+
+interface DenunciaType {
+    sigla: string
+    encargado: UserType | null
+    fecha_hecho: string
+    hora_hecho: string
+    lugar_hecho: string
+    tipo_denuncia: ComplaintType | null
+    infractores: Infractor[]
+    description: string
+}
 
 interface Client {
     name: string
@@ -77,12 +106,15 @@ interface AtendidosType {
     createdAt: string
     status: string
     userpatrol: UserPatrolsType[]
+    confirmed: DenunciaType
     _id: string
 }
 
 interface CellType {
     row: AtendidosType
 }
+
+
 
 const Asigned = () => {
 
@@ -92,13 +124,15 @@ const Asigned = () => {
     const [date, setDate] = useState<string>('')
     const [openDetails, setOpenDetails] = useState<boolean>(false)
     const [dataDetails, setDataDetails] = useState<UserPatrolsType[]>([])
+    const [confirmed, setConfirmed] = useState<DenunciaType | null>(null)
+    const [openConfirmed, setOpenonfirmed] = useState<boolean>(false)
 
     const toggleDetails = () => setOpenDetails(!openDetails)
+    const toggleConfirmed = () => setOpenonfirmed(!openConfirmed)
 
     const dispatch = useDispatch<AppDispatch>()
 
     const store = useSelector((state: RootState) => state.atendidos)
-    console.log(store)
 
     useEffect(() => {
         dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
@@ -110,6 +144,11 @@ const Asigned = () => {
 
     const handleConfirmed = (id: string) => {
         dispatch(updateAtendios({ skip: page * pageSize, limit: pageSize, id }))
+    }
+
+    const handleDenuncia = (confirmed: DenunciaType) => {
+        setConfirmed(confirmed)
+        toggleConfirmed()
     }
 
     const columns = [
@@ -225,12 +264,14 @@ const Asigned = () => {
             headerName: 'Acciones',
             renderCell: ({ row }: CellType) => {
                 return (
-                    <Button
-                        disabled={row.status !== 'warning'}
-                        variant="contained" color="success"
-                        onClick={() => handleConfirmed(row._id)}>
-                        Confirmar
-                    </Button>)
+                    <>
+                        {row.status === 'success' ? <Button variant="text" color="info" onClick={() => handleDenuncia(row.confirmed)}>Denuncia</Button> : <Button
+                            disabled={row.status !== 'warning'}
+                            variant="contained" color="success"
+                            onClick={() => handleConfirmed(row._id)}>
+                            Confirmar
+                        </Button>}
+                    </>)
             }
         }
     ]
@@ -309,6 +350,7 @@ const Asigned = () => {
                     </Grid>
                 </Grid>)
             }
+            <Denuncia confirmed={confirmed} open={openConfirmed} toggle={toggleConfirmed} />
         </Fragment>
 
     );

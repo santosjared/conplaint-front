@@ -160,7 +160,7 @@ const DetailsReceived = ({ data, toggle, page, pageSize, activeTab }: DetailsRec
                                         <Grid container spacing={2}>
                                             {data.images.map((img, index) => (
                                                 <Grid item xs={12} key={index}>
-                                                    <ImageContainer src={`${getConfig().backendURI}/images/${value}`} alt='img' />
+                                                    <ImageContainer src={`${getConfig().backendURI}/images/${img}`} alt='img' />
                                                 </Grid>
                                             ))}
                                         </Grid>
@@ -170,8 +170,8 @@ const DetailsReceived = ({ data, toggle, page, pageSize, activeTab }: DetailsRec
                                 </TabPanel>
                                 <TabPanel value="3">
                                     {data?.video ? (
-                                        <video width="100%" height="auto" controls>
-                                            <source src={data.video} type="video/mp4" />
+                                        <video width="100%" height="200px" controls style={{ borderRadius: 5 }}>
+                                            <source src={`${getConfig().backendURI}/videos/${data.video}`} type="video/mp4" />
                                             Your browser does not support the video tag.
                                         </video>
                                     ) : (

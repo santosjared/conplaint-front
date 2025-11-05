@@ -16,9 +16,6 @@ import Swal from 'sweetalert2';
 import ModeToggler from 'src/@core/layouts/components/shared-components/ModeToggler'
 import NotificationDropdown, { NotificationsType } from 'src/@core/layouts/components/shared-components/NotificationDropdown'
 import UserDropdown from 'src/@core/layouts/components/shared-components/UserDropdown'
-import { io } from 'socket.io-client'
-import environment from 'src/configs/environment'
-import { instance } from 'src/configs/axios'
 import { formatDistanceToNow, format, isYesterday } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -60,7 +57,6 @@ interface data {
   _id?: string
 }
 
-const socket = io(environment().backendURI);
 
 function getNotificationMeta(dateString: string): string {
   const date = new Date(dateString)
@@ -83,36 +79,36 @@ const AppBarContent = (props: Props) => {
 
   const [notifications, setNotifications] = useState<NotificationsType[]>([])
 
-  const data = async () => {
-    try {
-      const response = await instance.get('/complaints-client/complaints-with-status', { params: { status: 'waiting' } });
-      const newNotification: NotificationsType[] = response.data.data.map((value: data) => {
-        return {
-          meta: getNotificationMeta(value.createdAt),
-          title: `${value.userId.name} ${value.userId.lastName}`,
-          subtitle: value.complaints && value.complaints.name !== 'Otro' ? value.complaints.name : value.otherComplaints,
-          avatarText: value.userId.name[0] + value.userId.lastName[0],
-          avatarColor: 'info'
-        }
-      })
-      setNotifications(newNotification)
-    } catch (e) {
-      console.log(e);
-      Swal.fire({
-        title: '¡Error!',
-        text: 'Estamos teniendo problemas al solicitar datos. Por favor contacte al desarrollador del sistema para más asistencia.',
-        icon: "error"
-      });
-      return []
-    }
-  }
-  useEffect(() => {
-    data();
-  }, [])
+  // const data = async () => {
+  //   try {
 
-  socket.on('notification', (data) => {
-    data();
-  })
+  //     const newNotification: NotificationsType[] = response.data.result.map((value: data) => {
+  //       return {
+  //         meta: getNotificationMeta(value.createdAt),
+  //         title: `${value.userId.name} ${value.userId.lastName}`,
+  //         subtitle: value.complaints && value.complaints.name !== 'Otro' ? value.complaints.name : value.otherComplaints,
+  //         avatarText: value.userId.name[0] + value.userId.lastName[0],
+  //         avatarColor: 'info'
+  //       }
+  //     })
+  //     setNotifications(newNotification)
+  //   } catch (e) {
+  //     console.log(e);
+  //     Swal.fire({
+  //       title: '¡Error!',
+  //       text: 'Estamos teniendo problemas al solicitar datos. Por favor contacte al desarrollador del sistema para más asistencia.',
+  //       icon: "error"
+  //     });
+  //     return []
+  //   }
+  // }
+  // useEffect(() => {
+  //   data();
+  // }, [])
+
+  // socket.on('notification', (data) => {
+  //   data();
+  // })
 
   return (
     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

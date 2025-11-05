@@ -103,7 +103,6 @@ const DetailsReceived = () => {
         try {
             const response = await instance.get(`/atendidos/${user._id}`)
             setAtendidos(response.data || null)
-            console.log(response.data)
         } catch (error) {
             console.log(error)
         }

@@ -1,202 +1,118 @@
-import { Box, Card, Grid, Tooltip, Typography } from "@mui/material";
-import { SyntheticEvent, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch, RootState } from "src/store";
-import { useSelector } from "react-redux";
-import { fetchData } from "src/store/clients/complaints";
-import { io } from 'socket.io-client'
-import environment from 'src/configs/environment'
-import { ApexOptions } from "apexcharts";
+import { Box, Card, CardContent, Grid, IconButton, Tooltip, Typography } from "@mui/material";
+import { useState } from "react";
 import GraficaDenuncias from "./grafica-denuncias";
-import CrmMonthlyBudget from "./grafica-fecha";
 import CrmTotalGrowth from "./torta-denucias";
-
-interface SearchFilter {
-    name: string,
-    date: string
-}
-
-
-const socket = io(environment().backendURI)
+import Icon from "src/@core/components/icon"
+import { useSocket } from "src/hooks/useSocket";
 
 const Dashboard = () => {
 
-    const [activeTab, setActiveTab] = useState<string>('all')
-    const [page, setPage] = useState<number>(1)
-    const [filters, setFilters] = useState<SearchFilter>({ name: '', date: '' })
-
-    const limit = 5
-
-    const dispatch = useDispatch<AppDispatch>()
-
-    const store = useSelector((state: RootState) => state.complaintsClient)
-
-    useEffect(() => {
-        dispatch(fetchData({ ...filters, status: activeTab === 'all' ? '' : activeTab, skip: (page - 1) * limit, limit }))
-    }, [activeTab, page, filters])
-
-    socket.on('notification', (data) => {
-        dispatch(fetchData({ ...filters, status: activeTab === 'all' ? '' : activeTab, skip: (page - 1) * limit, limit }))
-    })
-
-    const handleChange = (event: SyntheticEvent, value: string) => {
-        setActiveTab(value)
-        setPage(1)
-    }
-    const search = (data: SearchFilter) => {
-        setPage(1)
-        setFilters(data)
-    }
+    const [open, setOpen] = useState<boolean>(true)
+    const { total_denuncias } = useSocket()
 
     return (
         <Grid container spacing={4}>
-            <Grid item xs={12}>
-                <Typography variant="h6">Denuncias para hoy</Typography>
-            </Grid>
-            <Grid item xs={3}>
+            {open && <Grid item xs={12}>
                 <Card>
-                    <Box sx={{ p: 2, backgroundColor: theme => theme.palette.primary.main }}>
-                        <Tooltip title="Total de denuncias atendidas" arrow>
-                            <Typography
-                                variant="subtitle2"
-                                noWrap
-                                sx={{
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                    color: 'white',
-                                    mb: 2,
-                                }}
-                            >
-                                Total de denuncias atendidas
-                            </Typography>
-                        </Tooltip>
+                    <Box sx={{ display: 'flex', justifyContent: 'end', p: 1 }}>
+                        <IconButton
+                            size="small"
+                            onClick={() => setOpen(false)}
+                            sx={{
+                                color: (theme) => theme.palette.primary.contrastText,
+                                backgroundColor: (theme) => theme.palette.secondary.main,
+                                transition: 'background-color 0.3s ease',
+                                '&:hover': {
+                                    backgroundColor: (theme) => theme.palette.secondary.dark,
+                                },
+                                '&:active': {
+                                    backgroundColor: (theme) => theme.palette.secondary.light,
+                                },
+                            }}
+                        >
+                            <Icon icon="mdi:close" fontSize={20} />
+                        </IconButton>
                     </Box>
-                    <Box
-                        sx={{
-                            backgroundColor: theme => theme.palette.success.main,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            height: 50,
-                        }}
-                    >
-                        <Typography variant="h6" color="white">
-                            78
+                    <CardContent sx={{ pt: 0, mt: 0 }}>
+                        <Typography variant="h6" gutterBottom>
+                            ¡Bienvenido a tu sitio web de denuncias!
                         </Typography>
-                    </Box>
-                </Card>
-            </Grid>
-            <Grid item xs={3}>
-                <Card>
-                    <Box sx={{ p: 2, backgroundColor: theme => theme.palette.primary.main }}>
-                        <Tooltip title="Total de denuncias recibidos" arrow>
-                            <Typography
-                                variant="subtitle2"
-                                noWrap
-                                sx={{
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                    color: 'white',
-                                    mb: 2,
+                        <Typography variant="caption">
+                            A través de este sistema podrás gestionar de forma eficiente todas las denuncias recibidas.
+                            Aquí tendrás la posibilidad de registrar nuevos reportes, atender denuncias pendientes y
+                            dar seguimiento a cada caso desde un solo lugar. Las denuncias llegan automáticamente desde
+                            la aplicación móvil, lo que facilita la comunicación y el acceso en tiempo real a la información.
+                            <br /><br />
+                            Si aún no tienes la aplicación instalada, puedes descargarla haciendo clic en el siguiente enlace:{" "}
+                            <a
+                                href="#"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    const userAgent = navigator.userAgent || navigator.vendor;
+                                    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+                                    const isAndroid = /android/i.test(userAgent);
+
+                                    if (isIOS) {
+                                        window.open("https://apps.apple.com/app/tu-app-id", "_blank");
+                                    } else if (isAndroid) {
+                                        window.open("https://play.google.com/store/apps/details?id=tu.app.id", "_blank");
+                                    } else {
+                                        window.open("https://play.google.com/store/apps/details?id=com.roblox.client&hl=es_419", "_blank");
+                                    }
                                 }}
+                                style={{ color: "#1976d2", textDecoration: "none", fontWeight: "bold" }}
                             >
-                                Total de denuncias recibidos
-                            </Typography>
-                        </Tooltip>
-                    </Box>
-                    <Box
-                        sx={{
-                            backgroundColor: theme => theme.palette.info.main,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            height: 50,
-                        }}
-                    >
-                        <Typography variant="h6" color="white">
-                            78
+                                Descargar aplicación móvil
+                            </a>.
                         </Typography>
-                    </Box>
+                    </CardContent>
                 </Card>
-            </Grid>
-            <Grid item xs={3}>
-                <Card>
-                    <Box sx={{ p: 2, backgroundColor: theme => theme.palette.primary.main }}>
-                        <Tooltip title="Total de denuncias sin atender" arrow>
-                            <Typography
-                                variant="subtitle2"
-                                noWrap
-                                sx={{
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                    color: 'white',
-                                    mb: 2,
-                                }}
-                            >
-                                Total de denuncias sin atender
+
+            </Grid>}
+            {total_denuncias.map((denuncia, index) => (
+                <Grid item xs={3} key={index}>
+                    <Card>
+                        <Box sx={{ p: 2, backgroundColor: theme => theme.palette.primary.main }}>
+                            <Tooltip title={`Total de denuncias ${denuncia.name}`} arrow>
+                                <Typography
+                                    variant="subtitle2"
+                                    noWrap
+                                    sx={{
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        color: 'white',
+                                        mb: 2,
+                                    }}
+                                >
+                                    {`Total de denuncias ${denuncia.name}`}
+                                </Typography>
+                            </Tooltip>
+                        </Box>
+                        <Box
+                            sx={{
+                                backgroundColor: theme =>
+                                    denuncia.name === 'Recibidos' ? theme.palette.info.main : denuncia.name === 'Rechazados' ?
+                                        theme.palette.error.main : denuncia.name === 'En espera' ? theme.palette.warning.main : theme.palette.success.main,
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                height: 50,
+                            }}
+                        >
+                            <Typography variant="h6" color="white">
+                                {denuncia.total}
                             </Typography>
-                        </Tooltip>
-                    </Box>
-                    <Box
-                        sx={{
-                            backgroundColor: theme => theme.palette.warning.main,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            height: 50,
-                        }}
-                    >
-                        <Typography variant="h6" color="white">
-                            78
-                        </Typography>
-                    </Box>
-                </Card>
-            </Grid>
-            <Grid item xs={3}>
-                <Card>
-                    <Box sx={{ p: 2, backgroundColor: theme => theme.palette.primary.main }}>
-                        <Tooltip title="Total de denuncias rechazadas" arrow>
-                            <Typography
-                                variant="subtitle2"
-                                noWrap
-                                sx={{
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                    color: 'white',
-                                    mb: 2,
-                                }}
-                            >
-                                Total de denuncias rechazadas
-                            </Typography>
-                        </Tooltip>
-                    </Box>
-                    <Box
-                        sx={{
-                            backgroundColor: theme => theme.palette.error.main,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            height: 50,
-                        }}
-                    >
-                        <Typography variant="h6" color="white">
-                            78
-                        </Typography>
-                    </Box>
-                </Card>
-            </Grid>
-            <Grid item xs={9}>
+                        </Box>
+                    </Card>
+                </Grid>
+            ))
+            }
+            <Grid item xs={12} sm={8}>
                 <GraficaDenuncias />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={12} sm={4}>
                 <CrmTotalGrowth />
-            </Grid>
-            <Grid item xs={9}>
-                <CrmMonthlyBudget />
             </Grid>
         </Grid>
 

@@ -20,6 +20,7 @@ interface Infractor {
     edad: number
     ocupation: string
     alias: string
+    _id?: string
 }
 
 interface ComplaintType {
@@ -109,10 +110,6 @@ const schema = yup.object().shape({
         .required('El campo sigla es requerido')
         .min(2, 'La sigla debe tener al menos 2 caracteres'),
 
-    encargado: yup
-        .mixed().transform(value => (value?.trim() === '' ? undefined : value))
-        .notRequired(),
-
     fecha_hecho: yup
         .string()
         .required('La fecha del hecho es requerida'),
@@ -148,9 +145,13 @@ const schema = yup.object().shape({
 
     description: yup
         .string()
-        .transform(value => (value?.trim() === '' ? undefined : value))
-        .min(10, 'El campo descripción debe tener al menos 10 caracteres')
-        .notRequired(),
+        .trim()
+        .notRequired()
+        .test(
+            'min-if-filled',
+            'El campo descripción debe tener al menos 10 caracteres',
+            (value) => !value || value.length >= 10
+        ),
 
     infractores: yup
         .array()
@@ -183,6 +184,10 @@ const schema = yup.object().shape({
                     .trim()
                     .required('La ocupación es requerida'),
                 alias: yup
+                    .string()
+                    .trim()
+                    .notRequired(),
+                _id: yup
                     .string()
                     .trim()
                     .notRequired()
@@ -431,7 +436,7 @@ const AddDenuncias = ({ toggle, atendido, fetch }: Props) => {
                         <Grid item xs={12}>
                             {fields.map((item, index) => (
                                 <Card key={index}
-                                    variant="outlined"
+                                    elevation={0}
                                     sx={{
                                         borderColor: 'primary.main',
                                         borderRadius: 2,
@@ -636,10 +641,11 @@ const AddDenuncias = ({ toggle, atendido, fetch }: Props) => {
                             size='large'
                             type='submit'
                             variant='contained'
+                            color={atendido?.status === 'warning' ? 'warning' : 'primary'}
                             sx={{ mr: 3 }}
                             startIcon={<Icon icon='mdi:content-save' />}
                         >
-                            Guardar
+                            {atendido?.status === 'warning' ? 'Actualizar' : 'Guardar'}
                         </Button>
                     </Box>
                 </fieldset>

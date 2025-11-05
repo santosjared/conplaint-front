@@ -1,58 +1,39 @@
 import { Card, CardContent, CardHeader, useTheme } from "@mui/material";
-import { ApexOptions } from "apexcharts"
+import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
-import { useState } from "react";
 import { hexToRGBA } from "src/@core/utils/hex-to-rgba";
+import { useSocket } from "src/hooks/useSocket";
 
-const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
+const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const GraficaDenuncias = () => {
-
     const theme = useTheme();
 
-    const [request, setRequest] = useState<number[]>([]);
+    const { denuncias } = useSocket()
 
     const series = [
         {
-            name: 'promedio',
-            data: request
+            name: "realizadas",
+            data: denuncias.map(item => item.total)
         }
-    ]
+    ];
+
     const options: ApexOptions = {
-        chart: {
-            parentHeightOffset: 0,
-            toolbar: { show: false }
-        },
+        chart: { parentHeightOffset: 0, toolbar: { show: false } },
         plotOptions: {
             bar: {
                 borderRadius: 8,
-                barHeight: '60%',
-                horizontal: true,
+                barHeight: "60%",
+                horizontal: false,
                 distributed: true,
-                startingShape: 'rounded'
+                startingShape: "rounded"
             }
         },
         dataLabels: {
-            offsetY: 8,
+            enabled: true,
             style: {
                 fontWeight: 500,
-                fontSize: '0.875rem'
-            }
-        },
-        grid: {
-            strokeDashArray: 8,
-            borderColor: theme.palette.divider,
-            xaxis: {
-                lines: { show: true }
-            },
-            yaxis: {
-                lines: { show: false }
-            },
-            padding: {
-                top: -18,
-                left: 21,
-                right: 33,
-                bottom: 10
+                fontSize: "0.875rem"
             }
         },
         colors: [
@@ -63,61 +44,43 @@ const GraficaDenuncias = () => {
             hexToRGBA(theme.palette.error.light, 1),
             hexToRGBA(theme.palette.secondary.light, 1)
         ],
-        legend: { show: false },
-        states: {
-            hover: {
-                filter: { type: 'none' }
-            },
-            active: {
-                filter: { type: 'none' }
-            }
-        },
         xaxis: {
-            axisTicks: { show: false },
-            axisBorder: { show: false },
-            categories: ['uno'],//names
+            categories: denuncias.map(item => item.name),
             labels: {
-                formatter: val => `${Number(val) / 1000}k`,
+                rotate: -45,
                 style: {
-                    fontSize: '0.875rem',
+                    fontSize: "0.875rem",
                     colors: theme.palette.text.disabled
                 }
             }
         },
         yaxis: {
             labels: {
-                align: theme.direction === 'rtl' ? 'right' : 'left',
                 style: {
                     fontWeight: 600,
-                    fontSize: '0.875rem',
+                    fontSize: "0.875rem",
                     colors: theme.palette.text.primary
                 }
             }
-        }
-    }
+        },
+        grid: {
+            borderColor: theme.palette.divider
+        },
+        legend: { show: false }
+    };
+
     return (
         <Card>
             <CardHeader
-                title='Denuncias frecuentes diario'
+                title="Frecuencia de denuncias recibidas"
                 subheaderTypographyProps={{ sx: { lineHeight: 1.429 } }}
-                titleTypographyProps={{ sx: { letterSpacing: '0.15px' } }}
+                titleTypographyProps={{ sx: { letterSpacing: "0.15px" } }}
             />
-            <CardContent
-                sx={{
-                    p: '0 !important',
-                    '& .apexcharts-canvas .apexcharts-yaxis-label': { fontSize: '0.875rem', fontWeight: 600 },
-                    '& .apexcharts-canvas .apexcharts-xaxis-label': { fontSize: '0.875rem', fill: theme.palette.text.disabled },
-                    '& .apexcharts-data-labels .apexcharts-datalabel': {
-                        fontWeight: 500,
-                        fontSize: '0.875rem',
-                        fill: theme.palette.common.white
-                    }
-                }}
-            >
-                <Chart type='bar' height={200} series={series} options={options} />
+            <CardContent>
+                <Chart type="bar" height={250} series={series} options={options} />
             </CardContent>
         </Card>
-    )
-}
+    );
+};
 
-export default GraficaDenuncias
+export default GraficaDenuncias;
