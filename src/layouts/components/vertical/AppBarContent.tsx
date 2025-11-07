@@ -1,23 +1,17 @@
-// ** MUI Imports
-import { Typography } from '@mui/material'
 import Box from '@mui/material/Box'
 import IconButton from '@mui/material/IconButton'
-import { useEffect, useState } from 'react'
-
-// ** Icon Imports
+import { useContext, useEffect, useState } from 'react'
 import Icon from 'src/@core/components/icon'
-
-
-// ** Type Import
 import { Settings } from 'src/@core/context/settingsContext'
-import Swal from 'sweetalert2';
-
-// ** Components
 import ModeToggler from 'src/@core/layouts/components/shared-components/ModeToggler'
 import NotificationDropdown, { NotificationsType } from 'src/@core/layouts/components/shared-components/NotificationDropdown'
 import UserDropdown from 'src/@core/layouts/components/shared-components/UserDropdown'
-import { formatDistanceToNow, format, isYesterday } from 'date-fns'
+import { formatDistanceToNow, isYesterday } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { useSocket } from 'src/hooks/useSocket'
+import getConfig from 'src/configs/environment'
+import { AbilityContext } from '../acl/Can'
+import Can from 'src/layouts/components/acl/Can'
 
 interface Props {
   hidden: boolean
@@ -47,6 +41,7 @@ interface data {
   latitude?: string
   longitude?: string
   images?: Array<string>
+  picture?: string
   video?: string
   otherComplaints?: string
   otherAggressor?: string
@@ -74,41 +69,28 @@ function getNotificationMeta(dateString: string): string {
   return diff.replace('alrededor de ', '')
 }
 const AppBarContent = (props: Props) => {
-  // ** Props
+
   const { hidden, settings, saveSettings, toggleNavVisibility } = props
 
   const [notifications, setNotifications] = useState<NotificationsType[]>([])
 
-  // const data = async () => {
-  //   try {
+  const ability = useContext(AbilityContext)
 
-  //     const newNotification: NotificationsType[] = response.data.result.map((value: data) => {
-  //       return {
-  //         meta: getNotificationMeta(value.createdAt),
-  //         title: `${value.userId.name} ${value.userId.lastName}`,
-  //         subtitle: value.complaints && value.complaints.name !== 'Otro' ? value.complaints.name : value.otherComplaints,
-  //         avatarText: value.userId.name[0] + value.userId.lastName[0],
-  //         avatarColor: 'info'
-  //       }
-  //     })
-  //     setNotifications(newNotification)
-  //   } catch (e) {
-  //     console.log(e);
-  //     Swal.fire({
-  //       title: '¡Error!',
-  //       text: 'Estamos teniendo problemas al solicitar datos. Por favor contacte al desarrollador del sistema para más asistencia.',
-  //       icon: "error"
-  //     });
-  //     return []
-  //   }
-  // }
-  // useEffect(() => {
-  //   data();
-  // }, [])
+  const { waitingComplaints } = useSocket()
 
-  // socket.on('notification', (data) => {
-  //   data();
-  // })
+  useEffect(() => {
+    const newNotification: NotificationsType[] = waitingComplaints.map((value: data) => {
+      return {
+        id: `${value._id}`,
+        meta: getNotificationMeta(value.createdAt),
+        title: `${value.userId?.name || 'Desconocido'} ${value.userId?.lastName || ''}`,
+        subtitle: `${value.otherComplaints || value.complaints?.name || 'Denuncia desconocida'}`,
+        avatarImg: `${getConfig().backendURI}/images/${value.picture}`,
+        avatarAlt: `${value.userId?.name || 'Desc'}`,
+      }
+    })
+    setNotifications(newNotification)
+  }, [waitingComplaints])
 
   return (
     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -121,8 +103,11 @@ const AppBarContent = (props: Props) => {
         <ModeToggler settings={settings} saveSettings={saveSettings} />
       </Box>
       <Box className='actions-right' sx={{ display: 'flex', alignItems: 'center' }}>
-        <NotificationDropdown settings={settings} notifications={notifications} />
-        <UserDropdown settings={settings} />
+        <Can I='read' a='recibidos'>
+          <NotificationDropdown notifications={notifications} />
+        </Can>
+        {/* {ability.can('read', 'recibidos') && <NotificationDropdown notifications={notifications} />} */}
+        <UserDropdown />
       </Box>
     </Box>
   )

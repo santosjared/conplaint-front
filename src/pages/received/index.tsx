@@ -38,11 +38,12 @@ interface DataType {
     images?: Array<string>
     video?: string
     otherComplaints?: string
-    otherAggressor?: string
+    otherAggresor?: string
     otherVictim?: string
     status?: string
     createdAt: string
     userId: Client
+    contact?: string
     _id?: string
 }
 interface CellType {
@@ -195,7 +196,7 @@ const Recibidos = () => {
             headerName: 'Tipo de denuncia',
             renderCell: ({ row }: CellType) => {
                 return (
-                    <Typography variant='body2' noWrap>{row.otherComplaints || row.complaints?.name}</Typography>
+                    <Typography variant='body2' color={row.complaints?.name === 'Emergencia' ? 'error.main' : 'secondary.main'} noWrap>{row.otherComplaints || row.complaints?.name}</Typography>
                 )
             }
         },
@@ -207,7 +208,7 @@ const Recibidos = () => {
             headerName: 'Agresor',
             renderCell: ({ row }: CellType) => {
                 return (
-                    <Typography variant='body2' noWrap>{row.otherAggressor || row.aggressor?.name}</Typography>
+                    <Typography variant='body2' noWrap>{row.otherAggresor || row.aggressor?.name}</Typography>
                 )
             }
         },

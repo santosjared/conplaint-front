@@ -7,10 +7,10 @@ const Watermark = () => {
             src="/images/pages/watermarker.png"
             alt="Marca de agua"
             sx={{
-                position: 'absolute',
-                bottom: { xs: 35, sm: 70 },
+                position: 'sticky',
+                bottom: { xs: 10, sm: 60 },
                 height: { xs: 35, sm: 70 },
-                right: 50,
+                left: '85%',
                 zIndex: 100
             }}
         />

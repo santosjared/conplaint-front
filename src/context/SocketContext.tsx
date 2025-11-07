@@ -7,6 +7,7 @@ export type Client = {
     lastName: string
     email: string
     phone: string
+    picture?: string
 }
 
 export type Kin = {

@@ -1,36 +1,23 @@
-// ** React Imports
 import { useState, SyntheticEvent, Fragment, ReactNode } from 'react'
-
-// ** MUI Imports
 import Box from '@mui/material/Box'
 import Badge from '@mui/material/Badge'
-import Button from '@mui/material/Button'
 import IconButton from '@mui/material/IconButton'
 import { styled, Theme } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import MuiMenu, { MenuProps } from '@mui/material/Menu'
 import MuiMenuItem, { MenuItemProps } from '@mui/material/MenuItem'
 import Typography, { TypographyProps } from '@mui/material/Typography'
-
-// ** Icon Imports
 import Icon from 'src/@core/components/icon'
-
-// ** Third Party Components
 import PerfectScrollbarComponent from 'react-perfect-scrollbar'
-
-// ** Type Imports
 import { ThemeColor } from 'src/@core/layouts/types'
-import { Settings } from 'src/@core/context/settingsContext'
 import { CustomAvatarProps } from 'src/@core/components/mui/avatar/types'
-
-// ** Custom Components Imports
 import CustomChip from 'src/@core/components/mui/chip'
 import CustomAvatar from 'src/@core/components/mui/avatar'
-
-// ** Util Import
 import { getInitials } from 'src/@core/utils/get-initials'
+import { useRouter } from 'next/router'
 
 export type NotificationsType = {
+  id: string
   meta: string
   title: string
   subtitle: string
@@ -52,11 +39,9 @@ export type NotificationsType = {
     }
   )
 interface Props {
-  settings: Settings
   notifications: NotificationsType[]
 }
 
-// ** Styled Menu component
 const Menu = styled(MuiMenu)<MenuProps>(({ theme }) => ({
   '& .MuiMenu-paper': {
     width: 380,
@@ -71,7 +56,6 @@ const Menu = styled(MuiMenu)<MenuProps>(({ theme }) => ({
   }
 }))
 
-// ** Styled MenuItem component
 const MenuItem = styled(MuiMenuItem)<MenuItemProps>(({ theme }) => ({
   paddingTop: theme.spacing(3),
   paddingBottom: theme.spacing(3),
@@ -80,19 +64,16 @@ const MenuItem = styled(MuiMenuItem)<MenuItemProps>(({ theme }) => ({
   }
 }))
 
-// ** Styled PerfectScrollbar component
 const PerfectScrollbar = styled(PerfectScrollbarComponent)({
   maxHeight: 344
 })
 
-// ** Styled Avatar component
 const Avatar = styled(CustomAvatar)<CustomAvatarProps>({
   width: 38,
   height: 38,
   fontSize: '1.125rem'
 })
 
-// ** Styled component for the title in MenuItems
 const MenuItemTitle = styled(Typography)<TypographyProps>(({ theme }) => ({
   fontWeight: 600,
   flex: '1 1 100%',
@@ -103,7 +84,6 @@ const MenuItemTitle = styled(Typography)<TypographyProps>(({ theme }) => ({
   marginBottom: theme.spacing(0.75)
 }))
 
-// ** Styled component for the subtitle in MenuItems
 const MenuItemSubtitle = styled(Typography)<TypographyProps>({
   flex: '1 1 100%',
   overflow: 'hidden',
@@ -120,22 +100,22 @@ const ScrollWrapper = ({ children, hidden }: { children: ReactNode; hidden: bool
 }
 
 const NotificationDropdown = (props: Props) => {
-  // ** Props
-  const { settings, notifications } = props
 
-  // ** States
+  const { notifications } = props
+
   const [anchorEl, setAnchorEl] = useState<(EventTarget & Element) | null>(null)
 
-  // ** Hook
   const hidden = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
 
+  const router = useRouter()
 
   const handleDropdownOpen = (event: SyntheticEvent) => {
     setAnchorEl(event.currentTarget)
   }
 
-  const handleDropdownClose = () => {
+  const handleDropdownClose = (id: string) => {
     setAnchorEl(null)
+    router.push(`/details/${id}`)
   }
 
   const RenderAvatar = ({ notification }: { notification: NotificationsType }) => {
@@ -185,12 +165,12 @@ const NotificationDropdown = (props: Props) => {
           disableTouchRipple
           sx={{ cursor: 'default', userSelect: 'auto', backgroundColor: 'transparent !important' }}
         >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', }}>
             <Typography sx={{ cursor: 'text', fontWeight: 600 }}>Notifications</Typography>
             <CustomChip
               skin='light'
               size='small'
-              color='primary'
+              color='success'
               label={`${notifications.length} Nuevos`}
               sx={{ height: 20, fontSize: '0.75rem', fontWeight: 500, borderRadius: '10px' }}
             />
@@ -198,14 +178,14 @@ const NotificationDropdown = (props: Props) => {
         </MenuItem>
         <ScrollWrapper hidden={hidden}>
           {notifications.map((notification: NotificationsType, index: number) => (
-            <MenuItem key={index} onClick={handleDropdownClose}>
+            <MenuItem key={index} onClick={() => handleDropdownClose(notification.id)}>
               <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
                 <RenderAvatar notification={notification} />
                 <Box sx={{ mx: 4, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
                   <MenuItemTitle>{notification.title}</MenuItemTitle>
                   <MenuItemSubtitle variant='body2'>{notification.subtitle}</MenuItemSubtitle>
                 </Box>
-                <Typography variant='caption' sx={{ color: 'text.disabled' }}>
+                <Typography variant='caption' sx={{ color: 'secondary.main' }}>
                   {notification.meta}
                 </Typography>
               </Box>

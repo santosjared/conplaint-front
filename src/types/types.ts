@@ -23,14 +23,14 @@ export type UserType = {
     phone: string,
     address: string,
     password: string,
-    rol: RolType
-    grade: GradeType
+    rol: RolType | null
+    grade: GradeType | null
     otherGrade?: string
     paternalSurname: string
     maternalSurname: string
     firstName: string
     exp: string
-    post: PostType
+    post: PostType | null
     otherPost?: string
     status?: string
     _id?: string

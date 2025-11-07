@@ -1,5 +1,5 @@
-import React, { useState, MouseEvent, useEffect, ChangeEvent } from 'react'
-import { Box, Button, Card, CardHeader, FormControl, Grid, IconButton, TextField, Typography } from '@mui/material'
+import React, { useState, MouseEvent, useEffect } from 'react'
+import { Box, Button, Card, CardHeader, Grid, IconButton, TextField, Typography, useTheme } from '@mui/material'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import { DataGrid } from "@mui/x-data-grid"
@@ -10,9 +10,9 @@ import { RootState, AppDispatch } from 'src/store'
 import { dowUser, fetchData, upUser } from 'src/store/user'
 import { useSelector } from 'react-redux'
 import CustomChip from 'src/@core/components/mui/chip'
-import AddUser from './register'
 import { UserType } from 'src/types/types'
 import Swal from 'sweetalert2'
+import AddUser from 'src/views/pages/users/Register'
 
 interface CellType {
     row: UserType
@@ -34,13 +34,13 @@ const defaultValues: UserType = {
     phone: '',
     address: '',
     password: '',
-    rol: { name: '', description: '' },
-    grade: { name: '', _id: '' },
+    rol: null,
+    grade: null,
     paternalSurname: '',
     maternalSurname: '',
     exp: '',
     firstName: '',
-    post: { name: '', _id: '' },
+    post: null,
     otherPost: '',
     otherGrade: '',
 }
@@ -49,9 +49,31 @@ const Users = () => {
     const [pageSize, setPageSize] = useState<number>(10)
     const [page, setPage] = useState<number>(0)
     const [drawOpen, setDrawOpen] = useState<boolean>(false)
-    const [filters, setFilters] = useState<string>('')
+    const [field, setField] = useState<string>('')
     const [mode, setMode] = useState<'create' | 'edit'>('create')
     const [userData, setUserData] = useState<UserType>(defaultValues)
+
+    const dispatch = useDispatch<AppDispatch>()
+
+    const store = useSelector((state: RootState) => state.user)
+
+    const theme = useTheme()
+
+    useEffect(() => {
+        dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
+    }, [pageSize, page])
+
+    const handleCreate = () => {
+        setMode('create')
+        setUserData(defaultValues)
+        toggleDrawer()
+    }
+
+
+    const toggleDrawer = () => setDrawOpen(!drawOpen)
+    const handleFilters = (filter: string) => {
+        dispatch(fetchData({ field: filter, skip: page * pageSize, limit: pageSize }))
+    }
 
     const columns = [
         {
@@ -250,11 +272,11 @@ const Users = () => {
                 title: `¿Estas seguro dar de baja a ${user.firstName} ${user.lastName}?`,
                 icon: "warning",
                 showCancelButton: true,
-                cancelButtonColor: "#3085d6",
+                cancelButtonColor: theme.palette.info.main,
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#ff4040',
+                confirmButtonColor: theme.palette.error.main,
                 confirmButtonText: 'Dar de baja',
-            }).then(async (result) => { return await result.isConfirmed });
+            }).then(async (result) => { return result.isConfirmed });
             if (confirme) {
                 dispatch(dowUser({ filters: { filter: '', skip: page * pageSize, limit: pageSize }, id: user._id }))
             }
@@ -266,9 +288,9 @@ const Users = () => {
                 title: `¿Estas seguro de reincorporar ${user.firstName} ${user.lastName}?`,
                 icon: "warning",
                 showCancelButton: true,
-                cancelButtonColor: "#3085d6",
+                cancelButtonColor: theme.palette.info.main,
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#72E128',
+                confirmButtonColor: theme.palette.success.main,
                 confirmButtonText: 'reincorporar',
             }).then(async (result) => { return result.isConfirmed });
             if (confirme) {
@@ -305,16 +327,16 @@ const Users = () => {
                     PaperProps={{ style: { minWidth: '8rem' } }}
                 >
                     <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
-                        <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4' />
+                        <Icon icon='mdi:pencil-outline' fontSize={20} color={theme.palette.info.main} />
                         Editar
                     </MenuItem>
                     {user.status === 'activo' ?
                         <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDow}>
-                            <Icon icon='mdi:arrow-down-thick' fontSize={20} color='#ff4040' />
+                            <Icon icon='mdi:arrow-down-thick' fontSize={20} color={theme.palette.error.main} />
                             Dar de baja
                         </MenuItem> :
                         <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleUp}>
-                            <Icon icon='mdi:arrow-up-thick' fontSize={20} color='#72E128' />
+                            <Icon icon='mdi:arrow-up-thick' fontSize={20} color={theme.palette.success.main} />
                             Reincorporar
                         </MenuItem>
                     }
@@ -322,29 +344,6 @@ const Users = () => {
                 </Menu>
             </>
         )
-    }
-
-    const dispatch = useDispatch<AppDispatch>()
-
-    const store = useSelector((state: RootState) => state.user)
-
-    useEffect(() => {
-        dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
-    }, [pageSize, page])
-
-    const handleCreate = () => {
-        setMode('create')
-        setUserData(defaultValues)
-        toggleDrawer()
-    }
-
-
-    const toggleDrawer = () => setDrawOpen(!drawOpen)
-    const handleFilters = () => {
-        dispatch(fetchData({ filter: filters, skip: page * pageSize, limit: pageSize }))
-    }
-    const handleSearchAll = () => {
-        dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }));
     }
     return (
         <Grid container spacing={6}>
@@ -367,8 +366,8 @@ const Users = () => {
                                 variant="outlined"
                                 name="search"
                                 autoComplete="off"
-                                value={filters}
-                                onChange={(e) => setFilters(e.target.value)}
+                                value={field}
+                                onChange={(e) => setField(e.target.value)}
                                 InputProps={{
                                     endAdornment: <Icon icon="mdi:search" />,
                                 }}
@@ -376,12 +375,12 @@ const Users = () => {
 
                             <Button
                                 variant="outlined"
-                                onClick={handleFilters}
+                                onClick={() => handleFilters(field)}
                                 sx={{ p: 3.5 }}
                             >
                                 Buscar
                             </Button>
-                            <Button variant="contained" sx={{ ml: 2, p: 3.2 }} onClick={handleSearchAll}>
+                            <Button variant="contained" sx={{ ml: 2, p: 3.2 }} onClick={() => handleFilters('')}>
                                 Todos
                             </Button>
                         </Box>

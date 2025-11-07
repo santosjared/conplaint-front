@@ -26,17 +26,6 @@ interface Props {
     defaultValues?: UserType;
 }
 
-const showErrors = (field: string, valueLen: number, min: number) => {
-    if (valueLen === 0) {
-        return `El campo ${field} es requerido`
-    } else if (valueLen > 0 && valueLen < min) {
-        return `El campo ${field} debe tener al menos ${min} caracteres`
-    } else {
-        return ''
-    }
-}
-
-
 
 const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Props) => {
 
@@ -52,79 +41,128 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
     const schema = yup.object().shape({
         grade: yup.object({
             _id: yup.string().required('El campo grado es requerido'),
-            name: yup.string().required('El campo grado es requerido'),
-        }).required('El campo grado es requerido'),
+            name: yup.string()
+                .min(2, 'El campo grado debe tener al menos 2 caracteres')
+                .max(50, 'El campo grado no debe exceder más de 50 caracteres')
+                .required('El campo grado es requerido'),
+        }).required('El campo grado es requerido')
+            .nullable(),
+
         paternalSurname: yup.string()
             .transform(value => (value === '' ? undefined : value))
-            .min(4, 'El campo apellido paterno debe tener al menos 4 caracteres')
+            .min(3, 'El campo apellido paterno debe tener al menos 3 caracteres')
             .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo apellido paterno solo debe contener letras')
+            .max(50, 'El campo apellido paterno no debe exceder más de 50 caracteres')
             .notRequired(),
+
         maternalSurname: yup.string()
             .transform(value => (value === '' ? undefined : value))
-            .min(4, 'El campo apellido materno debe tener al menos 4 caracteres')
+            .min(3, 'El campo apellido materno debe tener al menos 3 caracteres')
             .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo apellido materno solo debe contener letras')
+            .max(50, 'El campo apellido materno no debe exceder más de 50 caracteres')
             .notRequired(),
-        firstName: yup.string().required('El campo 1er. nombre es requerido')
-            .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo apellido solo debe contener letras')
-            .min(3, obj => showErrors('1er. nombre', obj.value.length, obj.min)),
+
+        firstName: yup.string()
+            .required('El campo 1er. nombre es requerido')
+            .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo 1er. nombre solo debe contener letras')
+            .min(3, 'El campo 1er. nombre debe tener al menos 3 caracteres')
+            .max(50, 'El campo 1er. nombre no debe exceder más de 50 caracteres'),
+
         lastName: yup.string()
             .transform(value => (value === '' ? undefined : value))
-            .min(3, 'El campo 2do. nombre debe tener al menos 4 caracteres')
+            .min(3, 'El campo 2do. nombre debe tener al menos 3 caracteres')
             .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo 2do. nombre solo debe contener letras')
+            .max(50, 'El campo 2do. nombre no debe exceder más de 50 caracteres')
             .notRequired(),
-        email: yup.string().email('Debe ingresar un correo electrónico válido').required('El campo correo electrónico es requerido'),
-        ci: yup.string().required('El campo ci es requerido')
-            .min(7, obj => showErrors('ci', obj.value.length, obj.min)),
-        exp: yup.string().required('Seleccione la expedición del carnet'),
+
+        email: yup.string()
+            .email('Debe ingresar un correo electrónico válido')
+            .min(5, 'El correo electrónico debe tener al menos 5 caracteres')
+            .max(100, 'El correo electrónico no debe exceder más de 100 caracteres')
+            .required('El campo correo electrónico es requerido'),
+
+        ci: yup.string()
+            .required('El campo ci es requerido')
+            .min(7, 'El campo ci debe tener al menos 7 caracteres')
+            .max(10, 'El campo ci no debe exceder más de 10 caracteres'),
+
+        exp: yup.string()
+            .required('Seleccione la expedición del carnet')
+            .min(2, 'La expedición del ci debe tener al menos 2 caracteres')
+            .max(10, 'La expedición del ci no debe exceder más de 10 caracteres'),
+
         post: yup.object({
             _id: yup.string().required('El campo cargo es requerido'),
-            name: yup.string().required('El campo cargo es requerido'),
-        }).required('El campo cargo es requerido'),
+            name: yup.string()
+                .min(2, 'El campo cargo debe tener al menos 2 caracteres')
+                .max(50, 'El campo cargo no debe exceder más de 50 caracteres')
+                .required('El campo cargo es requerido'),
+        }).required('El campo cargo es requerido')
+            .nullable(),
+
         customPost: yup.string().when('post', {
             is: 'other',
-            then: (schema) => schema.required('Especifique otro cargo, por favor'),
-            otherwise: (schema) => schema.notRequired(),
+            then: schema => schema
+                .required('Especifique otro cargo, por favor')
+                .min(3, 'El campo otro cargo debe tener al menos 3 caracteres')
+                .max(50, 'El campo otro cargo no debe exceder más de 50 caracteres'),
+            otherwise: schema => schema.notRequired(),
         }),
-        phone: yup
-            .string()
+
+        phone: yup.string()
             .matches(/^\d+$/, 'El celular debe contener solo números')
             .min(6, 'El celular debe tener al menos 6 dígitos')
+            .max(15, 'El celular no debe exceder más de 15 dígitos')
             .required('El campo celular es requerido'),
-        address: yup
-            .string()
-            .min(3, obj => showErrors('dirección', obj.value.length, obj.min))
+
+        address: yup.string()
+            .min(3, 'El campo dirección debe tener al menos 3 caracteres')
+            .max(100, 'El campo dirección no debe exceder más de 100 caracteres')
             .required('El campo dirección es requerido'),
+
         password: mode === 'create'
-            ? yup
-                .string()
-                .min(8, obj => showErrors('contraseña', obj.value.length, obj.min))
-                .required('El campo contraseña es requerido')
-            : yup
-                .string()
-                .transform(value => (value === '' ? undefined : value)) // elimina string vacío
+            ? yup.string()
                 .min(8, 'El campo contraseña debe tener al menos 8 caracteres')
+                .max(32, 'El campo contraseña no debe exceder más de 32 caracteres')
+                .required('El campo contraseña es requerido')
+            : yup.string()
+                .transform(value => (value === '' ? undefined : value))
+                .min(8, 'El campo contraseña debe tener al menos 8 caracteres')
+                .max(32, 'El campo contraseña no debe exceder más de 32 caracteres')
                 .notRequired(),
-        gender: yup.string().required('El campo sexo es obligatorio'),
+
+        gender: yup.string()
+            .required('El campo sexo es obligatorio')
+            .min(1, 'El campo sexo debe tener al menos 1 carácter')
+            .max(10, 'El campo sexo no debe exceder más de 10 caracteres'),
+
         rol: yup.object({
             _id: yup.string().required('El campo rol es requerido'),
-            name: yup.string().required('El campo rol es requerido'),
-        }).required('El campo rol es requerido'),
-        otherGrade: yup
-            .string()
-            .when('grade', {
-                is: (val: GradeType | null) => val?.name === 'Otro',
-                then: schema => schema.required('Debe especificar otro tipo de grado'),
-                otherwise: schema => schema.notRequired()
-            }),
-        otherPost: yup
-            .string()
-            .when('post', {
-                is: (val: PostType | null) => val?.name === 'Otro',
-                then: schema => schema.required('Debe especificar otro tipo de cargo'),
-                otherwise: schema => schema.notRequired()
-            }),
+            name: yup.string()
+                .min(2, 'El campo rol debe tener al menos 2 caracteres')
+                .max(50, 'El campo rol no debe exceder más de 50 caracteres')
+                .required('El campo rol es requerido'),
+        }).required('El campo rol es requerido')
+            .nullable(),
 
-    })
+        otherGrade: yup.string().when('grade', {
+            is: (val: GradeType | null) => val?.name === 'Otro',
+            then: schema => schema
+                .required('Debe especificar otro tipo de grado')
+                .min(3, 'El campo otro grado debe tener al menos 3 caracteres')
+                .max(50, 'El campo otro grado no debe exceder más de 50 caracteres'),
+            otherwise: schema => schema.notRequired()
+        }),
+
+        otherPost: yup.string().when('post', {
+            is: (val: PostType | null) => val?.name === 'Otro',
+            then: schema => schema
+                .required('Debe especificar otro tipo de cargo')
+                .min(3, 'El campo otro cargo debe tener al menos 3 caracteres')
+                .max(50, 'El campo otro cargo no debe exceder más de 50 caracteres'),
+            otherwise: schema => schema.notRequired()
+        }),
+    });
 
     const dispatch = useDispatch<AppDispatch>()
 
@@ -189,9 +227,9 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
         try {
             const modifiedData = {
                 ...data,
-                post: data.post._id || '',
-                grade: data.grade._id || '',
-                rol: data.rol._id || ''
+                post: data.post?._id || '',
+                grade: data.grade?._id || '',
+                rol: data.rol?._id || ''
             };
 
             if (mode === 'edit' && defaultValues?._id) {
@@ -243,7 +281,7 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
     return (<Box>
         <form autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
             <fieldset style={{ border: `1.5px solid ${theme.palette.primary.main}`, borderRadius: 10, paddingTop: 20 }}>
-                <legend style={{ textAlign: 'center' }}><Typography variant='subtitle2'>Agregar Nuevo Usuario</Typography></legend>
+                <legend style={{ textAlign: 'center' }}><Typography variant='subtitle2'>{mode === 'create' ? 'Agregar usuario' : 'Editar Usuario'}</Typography></legend>
                 <Grid container spacing={2}>
                     <Grid item xs={6}>
                         <FormControl fullWidth sx={{ mb: 6 }}>

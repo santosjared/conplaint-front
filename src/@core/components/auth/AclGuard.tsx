@@ -8,6 +8,7 @@ import Spinner from 'src/@core/components/spinner'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 import { useSelector } from 'react-redux'
 import { RootState } from 'src/store'
+import { createMongoAbility } from '@casl/ability' // para crear una habilidad vacía
 
 interface AclGuardProps {
   children: ReactNode
@@ -17,29 +18,36 @@ interface AclGuardProps {
 
 const AclGuard = ({ children, guestGuard, aclAbilities }: AclGuardProps) => {
   const [ability, setAbility] = useState<AppAbility | null>(null)
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true)
   const { user } = useSelector((state: RootState) => state.auth)
   const router = useRouter()
 
+  const emptyAbility = createMongoAbility<AppAbility>([])
+
   useEffect(() => {
-    if (user?.rol.permissions && !ability) {
+    if (user?.rol.permissions) {
       const newAbility = buildAbilityFor(user.rol.permissions)
       setAbility(newAbility)
     }
-    setLoading(false);
-  }, [user, ability])
-
-  if (guestGuard || ['/404', '/500', '/'].includes(router.route)) {
-    return <>{children}</>
-  }
-  if (ability && ability.can(aclAbilities.action, aclAbilities.subject)) {
-    return <AbilityContext.Provider value={ability}>{children}</AbilityContext.Provider>
-  }
-
+    setLoading(false)
+  }, [user])
   return (
-    <BlankLayout>
-      {loading ? <Spinner /> : <NotAuthorized />}
-    </BlankLayout>
+    <AbilityContext.Provider value={ability || emptyAbility}>
+      {guestGuard || ['/404', '/500', '/'].includes(router.route) ? (
+        <>{children}</>
+      ) : loading ? (
+        <BlankLayout>
+          <Spinner />
+        </BlankLayout>
+      ) : ability?.can(aclAbilities.action, aclAbilities.subject) ? (
+        <>{children}</>
+      ) : (
+        <BlankLayout>
+          <NotAuthorized />
+        </BlankLayout>
+      )}
+    </AbilityContext.Provider>
   )
 }
+
 export default AclGuard

@@ -1,14 +1,18 @@
-import { Box, Card, CardContent, Grid, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, Card, CardContent, Grid, IconButton, Tooltip, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
-import GraficaDenuncias from "./grafica-denuncias";
-import CrmTotalGrowth from "./torta-denucias";
 import Icon from "src/@core/components/icon"
 import { useSocket } from "src/hooks/useSocket";
+import GraficaDenuncias from "src/views/pages/dashboard/graficas/Estadisticas";
+import CrmTotalGrowth from "src/views/pages/dashboard/graficas/Torta";
+import getConfig from 'src/configs/environment'
 
 const Dashboard = () => {
 
     const [open, setOpen] = useState<boolean>(true)
+
+    const theme = useTheme()
     const { total_denuncias } = useSocket()
+
 
     return (
         <Grid container spacing={4}>
@@ -53,14 +57,14 @@ const Dashboard = () => {
                                     const isAndroid = /android/i.test(userAgent);
 
                                     if (isIOS) {
-                                        window.open("https://apps.apple.com/app/tu-app-id", "_blank");
+                                        window.open(getConfig().URL_IOS, "_blank");
                                     } else if (isAndroid) {
-                                        window.open("https://play.google.com/store/apps/details?id=tu.app.id", "_blank");
+                                        window.open(getConfig().URL_ANDROID, "_blank");
                                     } else {
-                                        window.open("https://play.google.com/store/apps/details?id=com.roblox.client&hl=es_419", "_blank");
+                                        window.open(getConfig().URL_NAVEGATOR, "_blank");
                                     }
                                 }}
-                                style={{ color: "#1976d2", textDecoration: "none", fontWeight: "bold" }}
+                                style={{ color: theme.palette.info.main, textDecoration: "none", fontWeight: "bold" }}
                             >
                                 Descargar aplicación móvil
                             </a>.
