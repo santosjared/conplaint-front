@@ -13,6 +13,7 @@ import CustomChip from 'src/@core/components/mui/chip'
 import { UserType } from 'src/types/types'
 import Swal from 'sweetalert2'
 import AddUser from 'src/views/pages/users/Register'
+import Can from 'src/layouts/components/acl/Can'
 
 interface CellType {
     row: UserType
@@ -278,7 +279,7 @@ const Users = () => {
                 confirmButtonText: 'Dar de baja',
             }).then(async (result) => { return result.isConfirmed });
             if (confirme) {
-                dispatch(dowUser({ filters: { filter: '', skip: page * pageSize, limit: pageSize }, id: user._id }))
+                dispatch(dowUser({ filters: { skip: page * pageSize, limit: pageSize }, id: user._id }))
             }
         }
 
@@ -294,7 +295,7 @@ const Users = () => {
                 confirmButtonText: 'reincorporar',
             }).then(async (result) => { return result.isConfirmed });
             if (confirme) {
-                dispatch(upUser({ filters: { filter: '', skip: page * pageSize, limit: pageSize }, id: user._id }))
+                dispatch(upUser({ filters: { skip: page * pageSize, limit: pageSize }, id: user._id }))
             }
         }
 
@@ -326,20 +327,24 @@ const Users = () => {
                     }}
                     PaperProps={{ style: { minWidth: '8rem' } }}
                 >
-                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
-                        <Icon icon='mdi:pencil-outline' fontSize={20} color={theme.palette.info.main} />
-                        Editar
-                    </MenuItem>
-                    {user.status === 'activo' ?
-                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDow}>
-                            <Icon icon='mdi:arrow-down-thick' fontSize={20} color={theme.palette.error.main} />
-                            Dar de baja
-                        </MenuItem> :
-                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleUp}>
-                            <Icon icon='mdi:arrow-up-thick' fontSize={20} color={theme.palette.success.main} />
-                            Reincorporar
+                    <Can I='update' a='users'>
+                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
+                            <Icon icon='mdi:pencil-outline' fontSize={20} color={theme.palette.info.main} />
+                            Editar
                         </MenuItem>
-                    }
+                    </Can>
+                    <Can I='delete' a='users'>
+                        {user.status === 'activo' ?
+                            <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDow}>
+                                <Icon icon='mdi:arrow-down-thick' fontSize={20} color={theme.palette.error.main} />
+                                Dar de baja
+                            </MenuItem> :
+                            <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleUp}>
+                                <Icon icon='mdi:arrow-up-thick' fontSize={20} color={theme.palette.success.main} />
+                                Reincorporar
+                            </MenuItem>
+                        }
+                    </Can>
 
                 </Menu>
             </>
@@ -385,13 +390,15 @@ const Users = () => {
                             </Button>
                         </Box>
 
-                        <Button
-                            sx={{ mt: { xs: 2, sm: 0 }, p: 3.2 }}
-                            onClick={handleCreate}
-                            variant="contained"
-                        >
-                            Nuevo usuario
-                        </Button>
+                        <Can I='create' a='users'>
+                            <Button
+                                sx={{ mt: { xs: 2, sm: 0 }, p: 3.2 }}
+                                onClick={handleCreate}
+                                variant="contained"
+                            >
+                                Nuevo usuario
+                            </Button>
+                        </Can>
                     </Box>
 
                     <DataGrid

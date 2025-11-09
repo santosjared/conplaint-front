@@ -1,9 +1,9 @@
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
-import { Box, Button, ButtonGroup, Card, CardContent, Divider, Grid, IconButton, Tab, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Divider, Grid, Tab, Typography } from "@mui/material";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import Icon from 'src/@core/components/icon'
 import AddDraw from "src/components/draw";
@@ -11,9 +11,10 @@ import { ImageContainer } from 'src/components/image-container';
 import { instance } from "src/configs/axios";
 import getConfig from 'src/configs/environment'
 import { RootState } from "src/store";
-import AddDenuncias from "./register";
 import { UserType } from "src/types/types";
 import CustomChip from 'src/@core/components/mui/chip'
+import AddDenuncias from "src/views/pages/atender/Register";
+import { AbilityContext } from "src/layouts/components/acl/Can";
 
 interface Infractor {
     apellido_paterno: string
@@ -89,7 +90,7 @@ const MapLocation = (dynamic(() => import('src/components/maps'), {
     ssr: false,
 }))
 
-const DetailsReceived = () => {
+const Atender = () => {
 
     const [value, setValue] = useState('1');
     const [atendidos, setAtendidos] = useState<Atendidos | null>(null)
@@ -99,9 +100,18 @@ const DetailsReceived = () => {
 
     const { user } = useSelector((state: RootState) => state.auth)
 
+    const ability = useContext(AbilityContext)
+
+    const canCreate = ability?.can('create', 'atender');
+    const canUpdate = ability?.can('update', 'atender');
+
+    const isEditing = atendidos?.status === 'warning';
+
+    const canShowButton = (!isEditing && canCreate) || (isEditing && canUpdate);
+
     const fetch = async () => {
         try {
-            const response = await instance.get(`/atendidos/${user._id}`)
+            const response = await instance.get(`/confirmed/${user._id}`)
             setAtendidos(response.data || null)
         } catch (error) {
             console.log(error)
@@ -220,9 +230,16 @@ const DetailsReceived = () => {
                             </Box>
                         </Card>
                     </Grid>
-                    <Grid item xs={12}>
-                        <Button variant="contained" color={atendidos.status === 'error' ? 'success' : 'warning'} onClick={toggleAdd} >{atendidos.status === 'error' ? 'Registrar denuncia' : 'Editar denuncia'}</Button>
-                    </Grid>
+                    {canShowButton && (
+                        <Grid item xs={12}>
+                            <Button
+                                variant="contained"
+                                color={atendidos.status === 'error' ? 'success' : 'warning'}
+                                onClick={toggleAdd} >
+                                {atendidos.status === 'error' ? 'Registrar denuncia' : 'Editar denuncia'}
+                            </Button>
+                        </Grid>
+                    )}
                 </Grid> :
                 <Box
                     sx={{
@@ -245,4 +262,11 @@ const DetailsReceived = () => {
     )
 }
 
-export default DetailsReceived;
+Atender.acl = {
+    action: 'read',
+    subject: 'atender'
+}
+
+Atender.authGuard = true;
+
+export default Atender;

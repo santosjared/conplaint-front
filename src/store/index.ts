@@ -2,22 +2,24 @@ import { configureStore } from '@reduxjs/toolkit';
 import user from './user';
 import rol from './role';
 import complaints from './complaints';
-import complaintsClient from './clients/complaints';
+import receveids from './received'
 import auth from './auth';
 import shits from './shits';
 import patrols from './patrols';
 import atendidos from './atendidos'
+import asignados from './asignes'
 
 export const store = configureStore({
     reducer: {
         user,
         rol,
         complaints,
-        complaintsClient,
+        receveids,
         auth,
         shits,
         patrols,
         atendidos,
+        asignados
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({

@@ -15,10 +15,10 @@ import { useEffect, useState } from "react";
 import { instance } from "src/configs/axios";
 import { UserType } from "src/types/types";
 import Icon from "src/@core/components/icon";
-import AddPersonal from "./AddPersonal";
-import AddServices from "./AddServices";
-import EditServices from "./EditService";
-import EditCargo from "./EditCargo";
+import AddPersonal from "../../../views/pages/shifts/asignar/AddPersonal";
+import AddServices from "../../../views/pages/shifts/asignar/AddServices";
+import EditServices from "../../../views/pages/shifts/asignar/EditService";
+import EditCargo from "../../../views/pages/shifts/asignar/EditCargo";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "src/store";
 import { updateShit } from "src/store/shits";
@@ -44,8 +44,8 @@ interface GgradeType {
 }
 
 interface UserService {
-    services: Services,
-    zone: ZoneType,
+    services: Services | null,
+    zone: ZoneType | null,
     otherService: string,
     otherZone: string
     users: User[]
@@ -330,5 +330,11 @@ const Asignar = () => {
     );
 };
 
+Asignar.acl = {
+    action: 'personal',
+    subject: 'shifts'
+}
+
+Asignar.authGuard = true;
 
 export default Asignar;

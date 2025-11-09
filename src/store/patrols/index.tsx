@@ -9,10 +9,20 @@ interface Redux {
 
 export const fetchData = createAsyncThunk('patrols/fetchPatrols',
     async (filters: { [key: string]: any }) => {
-        const response = await instance.get('/patrols', {
-            params: filters
-        })
-        return response.data
+        try {
+            const response = await instance.get('/patrols', {
+                params: filters
+            })
+            return response.data
+        } catch (e) {
+            console.log(e);
+            Swal.fire({
+                title: '¡Error!',
+                text: 'Se ha producido un error al intentar traer los vehículod de patrullas. Contacte al desarrollador del sistema para más asistencia.',
+                icon: "error"
+            });
+            return null
+        }
     }
 );
 
@@ -91,8 +101,8 @@ export const patrolsSlice = createSlice({
     extraReducers: builder => {
         builder
             .addCase(fetchData.fulfilled, (state, action) => {
-                state.data = action.payload.result || [],
-                    state.total = action.payload.total || 0
+                state.data = action.payload?.result || [],
+                    state.total = action.payload?.total || 0
             })
     }
 })

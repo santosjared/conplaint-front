@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Spinner from 'src/@core/components/spinner'
-import navigation from 'src/navigation/vertical'
+import navigation from 'src/navigation'
 import { buildAbilityFor } from 'src/configs/acl'
 import { useSelector } from 'react-redux'
 import { RootState } from 'src/store'

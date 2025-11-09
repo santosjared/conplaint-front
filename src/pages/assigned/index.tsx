@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardHeader, FormControl, Grid, TextField, Typography } from "@mui/material";
+import { Box, Button, Card, CardHeader, FormControl, Grid, TextField, Typography, useTheme } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "src/store";
@@ -7,10 +7,12 @@ import { DataGrid } from "@mui/x-data-grid";
 import { format } from 'date-fns';
 import CustomChip from 'src/@core/components/mui/chip'
 import Icon from "src/@core/components/icon";
-import { fetchData, updateAtendios } from "src/store/atendidos";
 import { UserType } from "src/types/types";
-import DetailAsigned from "./details";
-import Denuncia from "./denuncia";
+import DetailAsigned from "../../views/pages/asignados/details";
+import Denuncia from "../../views/pages/asignados/denuncia";
+import { confirmarDenuncia, fetchData } from "src/store/asignes";
+import Can from "src/layouts/components/acl/Can";
+import Swal from 'sweetalert2';
 
 interface ComplaintType {
     name: string
@@ -132,7 +134,8 @@ const Asigned = () => {
 
     const dispatch = useDispatch<AppDispatch>()
 
-    const store = useSelector((state: RootState) => state.atendidos)
+    const store = useSelector((state: RootState) => state.asignados)
+    const theme = useTheme()
 
     useEffect(() => {
         dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
@@ -142,8 +145,19 @@ const Asigned = () => {
         dispatch(fetchData({ field: data, skip: page * pageSize, limit: pageSize }))
     }
 
-    const handleConfirmed = (id: string) => {
-        dispatch(updateAtendios({ skip: page * pageSize, limit: pageSize, id }))
+    const handleConfirmed = async (id: string) => {
+        const confirme = await Swal.fire({
+            title: '¿Estas seguro de confirmar la atención de la denuncia?',
+            icon: "warning",
+            showCancelButton: true,
+            cancelButtonColor: theme.palette.error.main,
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: theme.palette.success.main,
+            confirmButtonText: 'Confirmar',
+        }).then(async (result) => { return result.isConfirmed });
+        if (confirme) {
+            dispatch(confirmarDenuncia({ id, filters: { skip: page * pageSize, limit: pageSize } }))
+        }
     }
 
     const handleDenuncia = (confirmed: DenunciaType) => {
@@ -265,12 +279,20 @@ const Asigned = () => {
             renderCell: ({ row }: CellType) => {
                 return (
                     <>
-                        {row.status === 'success' ? <Button variant="text" color="info" onClick={() => handleDenuncia(row.confirmed)}>Denuncia</Button> : <Button
-                            disabled={row.status !== 'warning'}
-                            variant="contained" color="success"
-                            onClick={() => handleConfirmed(row._id)}>
-                            Confirmar
-                        </Button>}
+                        {row.status === 'success' ?
+                            <Can I="look" a="asignes">
+                                <Button variant="text" color="info" onClick={() => handleDenuncia(row.confirmed)}>Denuncia</Button>
+                            </Can>
+                            :
+                            <Can I="confirmed" a="asignes">
+                                <Button
+                                    disabled={row.status !== 'warning'}
+                                    variant="contained" color="success"
+                                    onClick={() => handleConfirmed(row._id)}>
+                                    Confirmar
+                                </Button>
+                            </Can>
+                        }
                     </>)
             }
         }
@@ -314,7 +336,9 @@ const Asigned = () => {
                                         <Button variant="contained" sx={{ ml: 3, p: 3.5 }} onClick={() => search('')}>
                                             Todos
                                         </Button>
-                                        <Button variant="contained" color="error" sx={{ ml: 3, p: 3.5 }} startIcon={<Icon icon='mdi:printer-outline' />}>Reporte</Button>
+                                        <Can I="print" a="asignes">
+                                            <Button variant="contained" color="error" sx={{ ml: 3, p: 3.5 }} startIcon={<Icon icon='mdi:printer-outline' />}>Reporte</Button>
+                                        </Can>
                                     </Grid>
                                 </Grid>
                             </Box>
@@ -357,7 +381,7 @@ const Asigned = () => {
 }
 Asigned.acl = {
     action: 'read',
-    subject: 'dashboard'
+    subject: 'asignes'
 }
 
 Asigned.authGuard = true;

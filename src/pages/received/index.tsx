@@ -1,19 +1,21 @@
-import { Badge, Box, Button, Card, FormControl, Grid, IconButton, Menu, MenuItem, Tab, TabProps, TextField, Typography } from "@mui/material";
+import { Badge, Box, Button, Card, FormControl, Grid, IconButton, Menu, MenuItem, Tab, TabProps, TextField, Typography, useTheme } from "@mui/material";
 import { Fragment, SyntheticEvent, useEffect, useState, MouseEvent } from "react";
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList'
 import { useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "src/store";
 import { useSelector } from "react-redux";
-import { fetchData, refusedComplaints } from "src/store/clients/complaints";
 import Swal from 'sweetalert2';
 import { styled } from '@mui/material/styles'
 import { DataGrid } from "@mui/x-data-grid";
 import { format } from 'date-fns';
 import CustomChip from 'src/@core/components/mui/chip'
-import DetailsReceived from "./details";
+import DetailsReceived from "../../views/pages/received/details";
 import Icon from "src/@core/components/icon";
 import { useRouter } from "next/router";
+import { useSocket } from "src/hooks/useSocket";
+import Can from "src/layouts/components/acl/Can";
+import { fetchData, refusedComplaints } from "src/store/received";
 
 interface Client {
     name: string
@@ -71,11 +73,13 @@ const Recibidos = () => {
     const [openDetails, setOpenDetails] = useState<boolean>(false)
     const [dataDetails, setDataDetails] = useState<DataType | null>(null)
 
+    const { waitingComplaints, getData } = useSocket()
+
     const toggleDetails = () => setOpenDetails(!openDetails)
 
     const dispatch = useDispatch<AppDispatch>()
 
-    const store = useSelector((state: RootState) => state.complaintsClient)
+    const store = useSelector((state: RootState) => state.receveids)
 
     useEffect(() => {
         dispatch(fetchData({ status: activeTab !== 'all' ? activeTab : '', skip: page * pageSize, limit: pageSize }))
@@ -96,6 +100,8 @@ const Recibidos = () => {
 
         const router = useRouter()
 
+        const theme = useTheme()
+
         const handleRowOptionsClick = (event: MouseEvent<HTMLElement>) => {
             setAnchorEl(event.currentTarget)
         }
@@ -108,13 +114,20 @@ const Recibidos = () => {
                 title: '¿Estas seguro de rechazar la denuncia?',
                 icon: "warning",
                 showCancelButton: true,
-                cancelButtonColor: "#3085d6",
+                cancelButtonColor: theme.palette.info.main,
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#ff4040',
+                confirmButtonColor: theme.palette.error.main,
                 confirmButtonText: 'Si',
             }).then(async (result) => { return result.isConfirmed });
             if (confirme) {
-                dispatch(refusedComplaints({ status: activeTab !== 'all' ? activeTab : '', skip: page * pageSize, limit: pageSize, id: row._id || '' }))
+                dispatch(
+                    refusedComplaints({
+                        status: activeTab !== 'all' ? activeTab : '',
+                        skip: page * pageSize,
+                        limit: pageSize,
+                        id: row._id || ''
+                    }))
+                    .then(() => getData())
             }
         }
 
@@ -138,14 +151,18 @@ const Recibidos = () => {
                         }}
                         PaperProps={{ style: { minWidth: '8rem' } }}
                     >
-                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={() => router.push(`/received/asigned/${row._id}`)}>
-                            <Icon icon='mdi:account-hard-hat' fontSize={20} color='#00a0f4' />
-                            Atender denuncia
-                        </MenuItem>
-                        {row.status !== 'refused' && <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleRefuse}>
-                            <Icon icon='mdi:remove-bold' fontSize={20} color='#ff4040' />
-                            Rechazar denuncia
-                        </MenuItem>}
+                        <Can I="acepted" a="recibidos">
+                            <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={() => router.push(`/received/asigned/${row._id}`)}>
+                                <Icon icon='mdi:account-hard-hat' fontSize={20} color={theme.palette.info.main} />
+                                Atender denuncia
+                            </MenuItem>
+                        </Can>
+                        <Can I="refused" a="recibidos">
+                            {row.status !== 'refused' && <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleRefuse}>
+                                <Icon icon='mdi:remove-bold' fontSize={20} color={theme.palette.error.main} />
+                                Rechazar denuncia
+                            </MenuItem>}
+                        </Can>
                     </Menu></>}
             </>
         )
@@ -276,7 +293,7 @@ const Recibidos = () => {
                                     <TabList onChange={handleChange} variant="fullWidth" >
                                         <ItemTab label="Todos" value="all" />
                                         <ItemTab label="Denuncias atendidas" value="acepted" />
-                                        <ItemTab label={store.totalWaiting > 0 ? <Badge badgeContent={store.totalWaiting} color="error">
+                                        <ItemTab label={waitingComplaints.length > 0 ? <Badge badgeContent={waitingComplaints.length} color="error">
                                             Denuncias en espera
                                         </Badge> : 'Denuncias en espera'
                                         } value="waiting" sx={{ color: 'white' }} />
@@ -355,7 +372,7 @@ const Recibidos = () => {
 }
 Recibidos.acl = {
     action: 'read',
-    subject: 'dashboard'
+    subject: 'recibidos'
 }
 
 Recibidos.authGuard = true;

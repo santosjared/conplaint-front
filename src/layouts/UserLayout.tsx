@@ -2,7 +2,7 @@ import { ReactNode } from 'react'
 import { Theme } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import Layout from 'src/@core/layouts/Layout'
-import VerticalNavItems from 'src/navigation/vertical'
+import VerticalNavItems from 'src/navigation'
 import VerticalAppBarContent from './components/vertical/AppBarContent'
 import { useSettings } from 'src/@core/hooks/useSettings'
 

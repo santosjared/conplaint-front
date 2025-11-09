@@ -184,8 +184,8 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
     useEffect(() => {
         const fetchRol = async () => {
             try {
-                const response = await instance.get('/roles');
-                setRoles(response.data.result);
+                const response = await instance.get('/users/roles');
+                setRoles(response.data || []);
             } catch (e) {
                 console.log(e)
             }
@@ -249,7 +249,7 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                 await dispatch(updateUser({
                     data: modifiedData,
                     id: defaultValues._id,
-                    filtrs: { skip: page * pageSize, limit: pageSize }
+                    filters: { skip: page * pageSize, limit: pageSize }
                 }));
             }
             else {
@@ -264,7 +264,7 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
 
                 await dispatch(addUser({
                     data: modifiedData,
-                    filtrs: { skip: page * pageSize, limit: pageSize }
+                    filters: { skip: page * pageSize, limit: pageSize }
                 }));
             }
         } catch (error: any) {

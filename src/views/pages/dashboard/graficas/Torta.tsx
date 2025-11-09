@@ -68,7 +68,12 @@ const CrmTotalGrowth = () => {
     const theme = useTheme()
 
     const options: ApexOptions = {
-        legend: { show: true },
+        legend: {
+            show: true,
+            labels: {
+                colors: theme.palette.text.secondary
+            }
+        },
         stroke: { width: 5, colors: [theme.palette.background.paper] },
         colors: [
             theme.palette.error.main,

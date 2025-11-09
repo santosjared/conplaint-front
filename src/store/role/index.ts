@@ -8,15 +8,23 @@ interface Redux {
 }
 
 export const fetchData = createAsyncThunk('rol/fetchRol',
-    async (filtrs?: { [key: string]: any }) => {
-        if (filtrs) {
+    async (filters?: { [key: string]: any }) => {
+        try {
             const response = await instance.get('/roles', {
-                params: filtrs
+                params: filters
             })
             return response.data
+        } catch (e) {
+            console.log(e)
+
+            Swal.fire({
+                title: '¡Error!',
+                text: 'Se ha producido un error al intentar traer los. Contacte al desarrollador del sistema para más asistencia.',
+                icon: "error"
+            });
+
+            return null;
         }
-        const response = await instance.get('/roles')
-        return response.data
     }
 );
 
@@ -29,7 +37,7 @@ export const addRol = createAsyncThunk('rol/addRol',
                 text: 'Datos guardados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filtrs))
+            dispatch(fetchData(data.filters))
             return response
         } catch (e) {
             console.log(e)
@@ -51,7 +59,7 @@ export const updateRol = createAsyncThunk('rol/updateRol',
                 text: 'Datos actualizados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filtrs))
+            dispatch(fetchData(data.filters))
             return response
         } catch (e) {
             console.log(e)
@@ -72,7 +80,7 @@ export const deleteRol = createAsyncThunk('rol/deleteRol', async (data: { [key: 
             text: 'El rol fue eliminado exitosamente',
             icon: "success"
         });
-        dispatch(fetchData(data.filtrs))
+        dispatch(fetchData(data.filters))
         return response
     } catch (e) {
         console.log(e)
@@ -95,13 +103,11 @@ export const roleSlice = createSlice({
     extraReducers: builder => {
         builder
             .addCase(fetchData.fulfilled, (state, action) => {
-                state.data = action.payload.result,
-                    state.total = action.payload.total
+                state.data = action.payload?.result || [],
+                    state.total = action.payload?.total || 0
             })
     }
 })
-
-// export const { setRoles } = roleSlice.actions
 
 
 export default roleSlice.reducer

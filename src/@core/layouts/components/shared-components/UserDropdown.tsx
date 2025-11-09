@@ -86,12 +86,42 @@ const UserDropdown = () => {
             >
               <Avatar alt={user.name} src='/images/avatars/policy.png' sx={{ width: '2.5rem', height: '2.5rem' }} />
             </Badge>
-            <Box sx={{ display: 'flex', ml: 3, alignItems: 'flex-start', flexDirection: 'column' }}>
-              <Typography sx={{ fontWeight: 600 }}>{user?.name} {user?.lastName}</Typography>
-              <Typography variant='body2' sx={{ fontSize: '0.8rem', color: 'text.disabled' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                ml: 3,
+                alignItems: 'flex-start',
+                flexDirection: 'column',
+                width: '150px',
+              }}
+            >
+              <Typography
+                noWrap
+                sx={{
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {user?.firstName} {user?.paternalSurname}
+              </Typography>
+
+              <Typography
+                variant='body2'
+                sx={{
+                  fontSize: '0.8rem',
+                  color: 'text.disabled',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  width: '100%',
+                }}
+              >
                 {user?.rol?.name}
               </Typography>
             </Box>
+
           </Box>
         </Box>
         <Divider />

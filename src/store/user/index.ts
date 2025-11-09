@@ -8,15 +8,20 @@ interface Redux {
 }
 
 export const fetchData = createAsyncThunk('user/fetchUser',
-    async (filtrs?: { [key: string]: any }) => {
+    async (filters?: { [key: string]: any }) => {
         try {
             const response = await instance.get('/users', {
-                params: filtrs
+                params: filters
             })
             return response.data
         } catch (error) {
+            Swal.fire({
+                title: '¡Error!',
+                text: 'Se ha producido un error al intentar traer los usuarios. Contacte al desarrollador del sistema para más asistencia.',
+                icon: "error"
+            });
             console.log(error);
-            return { result: [], total: 0 }
+            return null
         }
 
     }
@@ -31,7 +36,7 @@ export const addUser = createAsyncThunk('user/addUser',
                 text: 'Datos guardados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filtrs))
+            dispatch(fetchData(data.filters))
             return response
         } catch (e) {
             console.log(e)
@@ -75,7 +80,7 @@ export const dowUser = createAsyncThunk('user/dowUser',
                 text: 'Usuario dado de baja',
                 icon: "success"
             });
-            dispatch(fetchData(data.filtrs))
+            dispatch(fetchData(data.filters))
             return response
         } catch (e) {
             console.log(e)
@@ -98,7 +103,7 @@ export const upUser = createAsyncThunk('user/upUser',
                 text: 'Usuario reincorporado',
                 icon: "success"
             });
-            dispatch(fetchData(data.filtrs))
+            dispatch(fetchData(data.filters))
             return response
         } catch (e) {
             console.log(e)
@@ -122,8 +127,8 @@ export const userSlice = createSlice({
     extraReducers: builder => {
         builder
             .addCase(fetchData.fulfilled, (state, action) => {
-                state.data = action.payload.result,
-                    state.total = action.payload.total
+                state.data = action.payload?.result || [],
+                    state.total = action.payload?.total || 0
             })
     }
 })

@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardContent, CardHeader, CardMedia, Divider, Grid, IconButton, Menu, MenuItem, Pagination, TextField, Typography, useTheme } from "@mui/material";
+import { Box, Button, Card, CardContent, CardHeader, CardMedia, Grid, IconButton, Menu, MenuItem, Pagination, TextField, Typography, useTheme } from "@mui/material";
 import { useEffect, useState, MouseEvent, Fragment } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -6,9 +6,10 @@ import Icon from "src/@core/components/icon";
 import AddDraw from "src/components/draw";
 import { AppDispatch, RootState } from "src/store";
 import { deleteComplaints, fetchData } from "src/store/complaints";
-import AddComplaints from "./register";
 import Swal from 'sweetalert2';
 import getConfig from 'src/configs/environment'
+import Can from "src/layouts/components/acl/Can";
+import AddComplaints from "src/views/pages/complaints/Register";
 
 interface ComplaintsModel {
     _id?: string
@@ -24,12 +25,14 @@ const defaultValues: ComplaintsModel = {
 
 interface props {
     complaint: ComplaintsModel
+    page: number
+    limit: number
     setValue: (data: ComplaintsModel) => void
     toggle: () => void
     setMode: (data: 'create' | 'edit') => void
 }
 
-const Options = ({ complaint, setValue, toggle, setMode }: props) => {
+const Options = ({ complaint, setValue, toggle, setMode, page, limit }: props) => {
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
     const rowOptionsOpen = Boolean(anchorEl)
@@ -56,13 +59,13 @@ const Options = ({ complaint, setValue, toggle, setMode }: props) => {
             title: '¿Estas seguro de eliminar?',
             icon: "warning",
             showCancelButton: true,
-            cancelButtonColor: "#3085d6",
+            cancelButtonColor: theme.palette.info.main,
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ff4040',
+            confirmButtonColor: theme.palette.error.main,
             confirmButtonText: 'Eliminar',
-        }).then(async (result) => { return await result.isConfirmed });
+        }).then(async (result) => { return result.isConfirmed });
         if (confirme) {
-            dispatch(deleteComplaints({ id: complaint._id }))
+            dispatch(deleteComplaints({ id: complaint._id, filters: { skip: (page - 1) * limit, limit } }))
         }
     }
 
@@ -86,14 +89,18 @@ const Options = ({ complaint, setValue, toggle, setMode }: props) => {
                 }}
                 PaperProps={{ style: { minWidth: '8rem' } }}
             >
-                <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
-                    <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4' />
-                    Editar
-                </MenuItem>
-                <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
-                    <Icon icon='ic:outline-delete' fontSize={20} color='#ff4040' />
-                    Eliminar
-                </MenuItem>
+                <Can I='update' a='complaints'>
+                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
+                        <Icon icon='mdi:pencil-outline' fontSize={20} color={theme.palette.info.main} />
+                        Editar
+                    </MenuItem>
+                </Can>
+                <Can I='delete' a='complaints'>
+                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
+                        <Icon icon='ic:outline-delete' fontSize={20} color={theme.palette.error.main} />
+                        Eliminar
+                    </MenuItem>
+                </Can>
             </Menu>
         </Fragment>
     )
@@ -101,7 +108,7 @@ const Options = ({ complaint, setValue, toggle, setMode }: props) => {
 
 
 const Complaints = () => {
-    const [name, setName] = useState<string>('')
+    const [field, setField] = useState<string>('')
     const [mode, setMode] = useState<'create' | 'edit'>('create')
     const [drawOpen, setDrawOpen] = useState<boolean>(false)
     const [complaintData, setComplaintData] = useState<ComplaintsModel>(defaultValues)
@@ -117,11 +124,8 @@ const Complaints = () => {
 
     const toggleDrawer = () => setDrawOpen(!drawOpen)
 
-    const handleFilters = () => {
-        dispatch(fetchData({ name, skip: (page - 1) * limit, limit }))
-    }
-    const handleSearchAll = () => {
-        dispatch(fetchData({ skip: (page - 1) * limit, limit }))
+    const handleFilters = (filter: string) => {
+        dispatch(fetchData({ filter, skip: (page - 1) * limit, limit }))
     }
     const handleCreate = () => {
         setMode('create')
@@ -147,8 +151,8 @@ const Complaints = () => {
                         variant="outlined"
                         name="search"
                         autoComplete="off"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        value={field}
+                        onChange={(e) => setField(e.target.value)}
                         InputProps={{
                             endAdornment: <Icon icon="mdi:search" />,
                         }}
@@ -156,22 +160,24 @@ const Complaints = () => {
 
                     <Button
                         variant="outlined"
-                        onClick={handleFilters}
+                        onClick={() => handleFilters(field)}
                         sx={{ p: 3.5 }}
                     >
                         Buscar
                     </Button>
-                    <Button variant="contained" sx={{ ml: 2, p: 3.2 }} onClick={handleSearchAll}>
+                    <Button variant="contained" sx={{ ml: 2, p: 3.2 }} onClick={() => handleFilters('')}>
                         Todos
                     </Button>
                 </Box>
-                <Button
-                    sx={{ mt: { xs: 2, sm: 0 }, p: 3.5 }}
-                    onClick={handleCreate}
-                    variant="contained"
-                >
-                    Nuevo denuncia
-                </Button>
+                <Can I='create' a='complaints'>
+                    <Button
+                        sx={{ mt: { xs: 2, sm: 0 }, p: 3.5 }}
+                        onClick={handleCreate}
+                        variant="contained"
+                    >
+                        Nuevo denuncia
+                    </Button>
+                </Can>
             </Box>
             <Grid container spacing={3}>
                 {store.data.map((complient: ComplaintsModel) => (
@@ -179,7 +185,14 @@ const Complaints = () => {
                         <Card>
                             <CardHeader
                                 action={
-                                    <Options complaint={complient} setValue={setComplaintData} toggle={toggleDrawer} setMode={setMode} />
+                                    <Options
+                                        complaint={complient}
+                                        setValue={setComplaintData}
+                                        toggle={toggleDrawer}
+                                        setMode={setMode}
+                                        page={page}
+                                        limit={limit}
+                                    />
                                 }
                                 title={complient.name}
                             />
@@ -206,6 +219,8 @@ const Complaints = () => {
                         toggle={toggleDrawer}
                         defaultValues={complaintData}
                         mode={mode}
+                        page={page}
+                        limit={limit}
                     />
                 </AddDraw>
             </Grid>

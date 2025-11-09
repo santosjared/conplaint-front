@@ -1,7 +1,7 @@
 export type ErrCallbackType = (err: { [key: string]: string }) => void
 
-export type Actions = 'manage' | 'create' | 'read' | 'update' | 'delete'
-export type Subjects = 'all' | 'usuarios' | 'roles' | 'denuncias' | 'home' | 'recibidos' | 'asignados' | 'atender' | 'vehiculos' | 'turnos'
+export type Actions = 'create' | 'read' | 'update' | 'delete' | 'permissions' | 'personal' | 'print' | 'acepted' | 'refused' | 'confirmed' | 'look'
+export type Subjects = 'dashboard' | 'users' | 'roles' | 'shifts' | 'vehicles' | 'complaints' | 'recibidos' | 'asignes' | 'atender'
 
 export type LoginParams = {
   email: string

@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardHeader, Grid, IconButton, Menu, MenuItem, TextField, Typography } from '@mui/material'
+import { Box, Button, Card, CardHeader, Grid, IconButton, Menu, MenuItem, TextField, Typography, useTheme } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid';
 import React, { useState, MouseEvent, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
@@ -6,10 +6,11 @@ import Icon from 'src/@core/components/icon';
 import AddDraw from 'src/components/draw';
 import { AppDispatch, RootState } from 'src/store';
 import { deleteRol, fetchData } from 'src/store/role';
-import AddRol from './register';
 import Swal from 'sweetalert2';
-import Permissions from './permissions';
 import { Rol } from 'src/context/types';
+import AddRol from 'src/views/pages/roles/Register';
+import Permissions from 'src/views/pages/roles/Permissions';
+import Can from 'src/layouts/components/acl/Can';
 
 interface CellType {
     row: Rol
@@ -30,10 +31,32 @@ const Roles = () => {
     const [drawOpen, setDrawOpen] = useState<boolean>(false)
     const [pageSize, setPageSize] = useState<number>(10)
     const [page, setPage] = useState<number>(0)
-    const [filters, setFilters] = useState<string>('')
+    const [field, setField] = useState<string>('')
     const [mode, setMode] = useState<'create' | 'edit'>('create')
     const [rolData, setRolData] = useState<Rol>(defaultValues)
     const [openPermissons, setOpenPermissions] = useState<boolean>(false)
+
+    const dispatch = useDispatch<AppDispatch>()
+    const store = useSelector((state: RootState) => state.rol)
+    useEffect(() => {
+        dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
+    }, [pageSize, page])
+
+    const toggleDrawer = () => setDrawOpen(!drawOpen)
+
+    const theme = useTheme()
+
+    const togglePermissions = () => setOpenPermissions(!openPermissons)
+
+    const handleCreate = () => {
+        setMode('create')
+        setRolData(defaultValues)
+        toggleDrawer()
+    }
+
+    const handleFilters = (filter: string) => {
+        dispatch(fetchData({ field: filter, skip: page * pageSize, limit: pageSize }))
+    }
 
     const RowOptions = ({ rol }: { rol: Rol }) => {
 
@@ -64,13 +87,13 @@ const Roles = () => {
                 title: '¿Estas seguro de eliminar?',
                 icon: "warning",
                 showCancelButton: true,
-                cancelButtonColor: "#3085d6",
+                cancelButtonColor: theme.palette.info.main,
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#ff4040',
+                confirmButtonColor: theme.palette.error.main,
                 confirmButtonText: 'Eliminar',
-            }).then(async (result) => { return await result.isConfirmed });
+            }).then(async (result) => { return result.isConfirmed });
             if (confirme) {
-                dispatch(deleteRol({ filters: { filter: '', skip: page * pageSize, limit: pageSize }, id: rol._id }))
+                dispatch(deleteRol({ filters: { skip: page * pageSize, limit: pageSize }, id: rol._id }))
             }
         }
 
@@ -94,18 +117,24 @@ const Roles = () => {
                     }}
                     PaperProps={{ style: { minWidth: '8rem' } }}
                 >
-                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
-                        <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4' />
-                        Editar
-                    </MenuItem>
-                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
-                        <Icon icon='ic:outline-delete' fontSize={20} color='#ff4040' />
-                        Eliminar
-                    </MenuItem>
-                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handlePermissions}>
-                        <Icon icon='material-symbols:key-vertical-rounded' fontSize={20} color='#6D788D' />
-                        Permisos
-                    </MenuItem>
+                    <Can I='update' a='roles'>
+                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
+                            <Icon icon='mdi:pencil-outline' fontSize={20} color={theme.palette.info.main} />
+                            Editar
+                        </MenuItem>
+                    </Can>
+                    <Can I='delete' a='roles'>
+                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
+                            <Icon icon='ic:outline-delete' fontSize={20} color={theme.palette.error.main} />
+                            Eliminar
+                        </MenuItem>
+                    </Can>
+                    <Can I='permissions' a='roles'>
+                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handlePermissions}>
+                            <Icon icon='material-symbols:key-vertical-rounded' fontSize={20} color={theme.palette.secondary.main} />
+                            Permisos
+                        </MenuItem>
+                    </Can>
                 </Menu>
             </>
         )
@@ -146,30 +175,6 @@ const Roles = () => {
             }
         }
     ]
-
-    const dispatch = useDispatch<AppDispatch>()
-    const store = useSelector((state: RootState) => state.rol)
-    useEffect(() => {
-        dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
-    }, [pageSize, page])
-
-    const toggleDrawer = () => setDrawOpen(!drawOpen)
-
-    const togglePermissions = () => setOpenPermissions(!openPermissons)
-
-    const handleCreate = () => {
-        setMode('create')
-        setRolData(defaultValues)
-        toggleDrawer()
-    }
-
-    const handleFilters = () => {
-        dispatch(fetchData({ filter: filters, skip: page * pageSize, limit: pageSize }))
-    }
-    const handleSearchAll = () => {
-        dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
-    }
-
     return (
         <Grid container spacing={6}>
             <Grid item xs={12}>
@@ -191,8 +196,8 @@ const Roles = () => {
                                 variant="outlined"
                                 name="search"
                                 autoComplete="off"
-                                value={filters}
-                                onChange={(e) => setFilters(e.target.value)}
+                                value={field}
+                                onChange={(e) => setField(e.target.value)}
                                 InputProps={{
                                     endAdornment: <Icon icon="mdi:search" />,
                                 }}
@@ -200,23 +205,25 @@ const Roles = () => {
 
                             <Button
                                 variant="outlined"
-                                onClick={handleFilters}
+                                onClick={() => handleFilters(field)}
                                 sx={{ p: 3.5 }}
                             >
                                 Buscar
                             </Button>
-                            <Button variant="contained" sx={{ ml: 2, p: 3.2 }} onClick={handleSearchAll}>
+                            <Button variant="contained" sx={{ ml: 2, p: 3.2 }} onClick={() => handleFilters('')}>
                                 Todos
                             </Button>
                         </Box>
 
-                        <Button
-                            sx={{ mt: { xs: 2, sm: 0 }, p: 3.5 }}
-                            onClick={handleCreate}
-                            variant="contained"
-                        >
-                            Nuevo Rol
-                        </Button>
+                        <Can I='create' a='roles'>
+                            <Button
+                                sx={{ mt: { xs: 2, sm: 0 }, p: 3.5 }}
+                                onClick={handleCreate}
+                                variant="contained"
+                            >
+                                Nuevo Rol
+                            </Button>
+                        </Can>
                     </Box>
 
                     <DataGrid
@@ -242,7 +249,7 @@ const Roles = () => {
                     />
                 </Card>
             </Grid>
-            <AddDraw open={drawOpen} toggle={toggleDrawer} title={mode === 'create' ? 'Registro del rol' : 'Editar rol'}>
+            <AddDraw open={drawOpen} toggle={toggleDrawer} title={mode === 'create' ? 'Registro del Rol' : 'Editar Rol'}>
                 <AddRol
                     toggle={toggleDrawer}
                     page={page}

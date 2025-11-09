@@ -8,11 +8,22 @@ interface Redux {
 }
 
 export const fetchData = createAsyncThunk('shits/fetchShits',
-    async (filtrs?: { [key: string]: any }) => {
-        const response = await instance.get('/shits', {
-            params: filtrs
-        })
-        return response.data
+    async (filters?: { [key: string]: any }) => {
+        try {
+            const response = await instance.get('/shits', {
+                params: filters
+            })
+            return response.data
+        } catch (e) {
+            console.log(e)
+            Swal.fire({
+                title: '¡Error!',
+                text: 'Se ha producido un error al intentar traer turno. Contacte al desarrollador del sistema para más asistencia.',
+                icon: "error"
+            });
+
+            return null
+        }
     }
 );
 
@@ -25,13 +36,13 @@ export const addShit = createAsyncThunk('shits/addShit',
                 text: 'Datos guardados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filtrs))
+            dispatch(fetchData(data.filters))
             return response
         } catch (e) {
             console.log(e)
             Swal.fire({
                 title: '¡Error!',
-                text: 'Se ha producido un error al intentar crear al rol. Contacte al desarrollador del sistema para más asistencia.',
+                text: 'Se ha producido un error al intentar crear al turno. Contacte al desarrollador del sistema para más asistencia.',
                 icon: "error"
             });
         }
@@ -47,13 +58,13 @@ export const updateShit = createAsyncThunk('shits/updateShit',
                 text: 'Datos actualizados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filtrs))
+            dispatch(fetchData(data.filters))
             return response
         } catch (e) {
             console.log(e)
             Swal.fire({
                 title: '¡Error!',
-                text: 'Se ha producido un error al intentar actualizar rol. Contacte al desarrollador del sistema para más asistencia.',
+                text: 'Se ha producido un error al intentar actualizar turno. Contacte al desarrollador del sistema para más asistencia.',
                 icon: "error"
             });
         }
@@ -68,7 +79,7 @@ export const deleteShit = createAsyncThunk('shits/deleteShit', async (data: { [k
             text: 'El turno fue eliminado exitosamente',
             icon: "success"
         });
-        dispatch(fetchData(data.filtrs))
+        dispatch(fetchData(data.filters))
         return response
     } catch (e) {
         console.log(e)
@@ -91,8 +102,8 @@ export const shitSlice = createSlice({
     extraReducers: builder => {
         builder
             .addCase(fetchData.fulfilled, (state, action) => {
-                state.data = action.payload.result || [],
-                    state.total = action.payload.total || 0
+                state.data = action.payload?.result || [],
+                    state.total = action.payload?.total || 0
             })
     }
 })

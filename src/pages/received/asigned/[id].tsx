@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
     Box,
     Button,
@@ -15,14 +15,15 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Typography
+    Typography,
+    useTheme
 } from '@mui/material'
 import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
 import Icon from 'src/@core/components/icon'
-import AddPatrols from './AddPatrols'
-import AddPersonal from './AddPersonal'
+import AddPatrols from '../../../views/pages/received/asigned/AddPatrols'
+import AddPersonal from '../../../views/pages/received/asigned/AddPersonal'
 import { UserType } from 'src/types/types'
 import baseUrl from 'src/configs/environment'
 import { hexToRGBA } from "src/@core/utils/hex-to-rgba";
@@ -30,6 +31,8 @@ import Paper from '@mui/material/Paper'
 import Swal from 'sweetalert2'
 import { instance } from 'src/configs/axios'
 import { useRouter } from 'next/router'
+import Can from 'src/layouts/components/acl/Can'
+import { useSocket } from 'src/hooks/useSocket'
 
 interface User {
     cargo?: string
@@ -77,6 +80,9 @@ const MenuAsigned = () => {
 
     const router = useRouter();
     const { id } = router.query
+    const { getData } = useSocket()
+
+    const theme = useTheme()
 
     const togglePatrols = () => setAddPatrols(prev => !prev)
     const togglePersonal = () => setAddPersonal(prev => !prev)
@@ -102,9 +108,9 @@ const MenuAsigned = () => {
             text: `Se perderan las configuraciones del tab ${tabs[index].label}`,
             icon: "warning",
             showCancelButton: true,
-            cancelButtonColor: "#3085d6",
+            cancelButtonColor: theme.palette.info.main,
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ff4040',
+            confirmButtonColor: theme.palette.error.main,
             confirmButtonText: 'Eliminar',
         }).then(async (result) => { return result.isConfirmed });
         if (confirme) {
@@ -186,6 +192,7 @@ const MenuAsigned = () => {
                     text: 'Las patrullas fueron asignadas correctamente.',
                     icon: 'success',
                 });
+                getData()
                 router.back();
             } catch (error) {
                 console.error('Error al guardar:', error);
@@ -369,9 +376,11 @@ const MenuAsigned = () => {
                 <Button variant='contained' color='error' onClick={handleCancel}>
                     Cancelar
                 </Button>
-                <Button variant='contained' color='success' onClick={handleSave}>
-                    Guardar
-                </Button>
+                <Can I='acepted' a='recibidos'>
+                    <Button variant='contained' color='success' onClick={handleSave}>
+                        Guardar
+                    </Button>
+                </Can>
             </Box>
 
             <AddPatrols open={addPatrols} toggle={togglePatrols} onSelect={handleSelectPatrol} tabs={tabs} currentIndex={currentIndex} />
@@ -379,5 +388,12 @@ const MenuAsigned = () => {
         </Box>
     )
 }
+
+MenuAsigned.acl = {
+    action: 'acepted',
+    subject: 'recibidos'
+}
+
+MenuAsigned.authGuard = true;
 
 export default MenuAsigned

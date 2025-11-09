@@ -10,8 +10,9 @@ import { RootState, AppDispatch } from 'src/store'
 import baseUrl from 'src/configs/environment'
 import { useSelector } from 'react-redux'
 import Swal from 'sweetalert2'
-import AddVehicle from './register'
 import { deletePatrols, fetchData } from 'src/store/patrols'
+import Can from 'src/layouts/components/acl/Can'
+import AddVehicle from 'src/views/pages/patrols/Register'
 
 
 interface MarkerType {
@@ -28,8 +29,8 @@ interface VehicleType {
     _id?: string
     plaque: string
     code: string
-    marker: MarkerType
-    type: TypeType
+    marker: MarkerType | null
+    type: TypeType | null
     otherMarker: string
     otherType: string
     image: File | null
@@ -44,8 +45,8 @@ interface CellType {
 const defaultValues: VehicleType = {
     plaque: '',
     code: '',
-    marker: { _id: '', name: '' },
-    type: { _id: '', name: '' },
+    marker: null,
+    type: null,
     otherMarker: '',
     otherType: '',
     image: null,
@@ -59,6 +60,27 @@ const Patrols = () => {
     const [field, setField] = useState<string>('')
     const [mode, setMode] = useState<'create' | 'edit'>('create')
     const [vehicle, setVehicle] = useState<VehicleType>(defaultValues)
+
+
+    const dispatch = useDispatch<AppDispatch>()
+
+    const store = useSelector((state: RootState) => state.patrols)
+
+    useEffect(() => {
+        dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
+    }, [page, pageSize])
+
+    const handleCreate = () => {
+        setMode('create')
+        setVehicle(defaultValues)
+        toggleDrawer()
+    }
+
+
+    const toggleDrawer = () => setDrawOpen(!drawOpen)
+    const handleFilters = async (filter: string) => {
+        dispatch(fetchData({ field: filter, skip: page * pageSize, limit: pageSize }))
+    }
 
     const columns = [
         {
@@ -162,13 +184,13 @@ const Patrols = () => {
                 title: `¿Estas seguro de eliminar el horario ?`,
                 icon: "warning",
                 showCancelButton: true,
-                cancelButtonColor: "#3085d6",
+                cancelButtonColor: theme.palette.info.main,
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#ff4040',
+                confirmButtonColor: theme.palette.error.main,
                 confirmButtonText: 'Eliminar',
             }).then(async (result) => { return result.isConfirmed });
             if (confirme) {
-                dispatch(deletePatrols({ filters: { field, skip: page * pageSize, limit: pageSize }, id: vehicle._id }))
+                dispatch(deletePatrols({ filters: { skip: page * pageSize, limit: pageSize }, id: vehicle._id }))
             }
         }
 
@@ -199,40 +221,21 @@ const Patrols = () => {
                     }}
                     PaperProps={{ style: { minWidth: '8rem' } }}
                 >
-                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
-                        <Icon icon='mdi:pencil-outline' fontSize={20} color={theme.palette.info.main} />
-                        Editar
-                    </MenuItem>
-                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
-                        <Icon icon='ic:outline-delete' fontSize={20} color={theme.palette.error.main} />
-                        Eliminar
-                    </MenuItem>
+                    <Can I='update' a='vehicles'>
+                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
+                            <Icon icon='mdi:pencil-outline' fontSize={20} color={theme.palette.info.main} />
+                            Editar
+                        </MenuItem>
+                    </Can>
+                    <Can I='delete' a='vehicles'>
+                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
+                            <Icon icon='ic:outline-delete' fontSize={20} color={theme.palette.error.main} />
+                            Eliminar
+                        </MenuItem>
+                    </Can>
                 </Menu>
             </>
         )
-    }
-
-    const dispatch = useDispatch<AppDispatch>()
-
-    const store = useSelector((state: RootState) => state.patrols)
-
-    useEffect(() => {
-        dispatch(fetchData({ field, skip: page * pageSize, limit: pageSize }))
-    }, [page, pageSize])
-
-    const handleCreate = () => {
-        setMode('create')
-        setVehicle(defaultValues)
-        toggleDrawer()
-    }
-
-
-    const toggleDrawer = () => setDrawOpen(!drawOpen)
-    const handleFilters = async () => {
-        dispatch(fetchData({ field, skip: page * pageSize, limit: pageSize }))
-    }
-    const allData = async () => {
-        dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
     }
     return (
         <Grid container spacing={6}>
@@ -264,27 +267,29 @@ const Patrols = () => {
 
                             <Button
                                 variant="outlined"
-                                onClick={handleFilters}
+                                onClick={() => handleFilters(field)}
                                 sx={{ height: 50 }}
                             >
                                 Buscar
                             </Button>
                             <Button
                                 variant="contained"
-                                onClick={allData}
+                                onClick={() => handleFilters('')}
                                 sx={{ height: 50 }}
                             >
                                 Todos
                             </Button>
                         </Box>
 
-                        <Button
-                            sx={{ height: 50 }}
-                            onClick={handleCreate}
-                            variant="contained"
-                        >
-                            Nuevo vehiculo
-                        </Button>
+                        <Can I='create' a='vehicles' >
+                            <Button
+                                sx={{ height: 50 }}
+                                onClick={handleCreate}
+                                variant="contained"
+                            >
+                                Nuevo vehiculo
+                            </Button>
+                        </Can>
                     </Box>
 
                     <DataGrid
@@ -324,7 +329,7 @@ const Patrols = () => {
 }
 Patrols.acl = {
     action: 'read',
-    subject: 'turnos'
+    subject: 'vehicles'
 }
 
 Patrols.authGuard = true;

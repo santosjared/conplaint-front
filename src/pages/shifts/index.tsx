@@ -9,9 +9,10 @@ import AddDraw from 'src/components/draw'
 import { RootState, AppDispatch } from 'src/store'
 import { useSelector } from 'react-redux'
 import Swal from 'sweetalert2'
-import AddShits from './register'
+import AddShits from '../../views/pages/shifts/register'
 import { deleteShit, fetchData } from 'src/store/shits'
 import { useRouter } from 'next/router'
+import Can from 'src/layouts/components/acl/Can'
 
 
 const today = new Date().toISOString().split('T')[0]
@@ -56,6 +57,30 @@ const Shifts = () => {
     const [mode, setMode] = useState<'create' | 'edit'>('create')
     const [shitsData, setShitsData] = useState<ShiftsType>(defaultValues)
     const [dateFilter, setDateFilter] = useState<string>('')
+
+    const dispatch = useDispatch<AppDispatch>()
+
+    const store = useSelector((state: RootState) => state.shits)
+
+    useEffect(() => {
+        dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
+    }, [page, pageSize])
+
+    const handleCreate = () => {
+        setMode('create')
+        setShitsData(defaultValues)
+        toggleDrawer()
+    }
+
+
+    const toggleDrawer = () => setDrawOpen(!drawOpen)
+    const handleFilters = async (filter: string) => {
+        dispatch(fetchData({ field: filter, skip: page * pageSize, limit: pageSize }))
+    }
+    const filterDate = (date: string) => {
+        setDateFilter(date)
+        dispatch(fetchData({ field: date, skip: page * pageSize, limit: pageSize }))
+    }
 
     const columns = [
         {
@@ -128,13 +153,13 @@ const Shifts = () => {
                 title: `¿Estas seguro de eliminar el horario ?`,
                 icon: "warning",
                 showCancelButton: true,
-                cancelButtonColor: "#3085d6",
+                cancelButtonColor: theme.palette.info.main,
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#ff4040',
+                confirmButtonColor: theme.palette.error.main,
                 confirmButtonText: 'Eliminar',
             }).then(async (result) => { return result.isConfirmed });
             if (confirme) {
-                dispatch(deleteShit({ filters: { field, skip: page * pageSize, limit: pageSize }, id: shits._id }))
+                dispatch(deleteShit({ filters: { skip: page * pageSize, limit: pageSize }, id: shits._id }))
             }
         }
 
@@ -169,52 +194,33 @@ const Shifts = () => {
                     }}
                     PaperProps={{ style: { minWidth: '8rem' } }}
                 >
-                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
-                        <Icon icon='mdi:pencil-outline' fontSize={20} color={theme.palette.info.main} />
-                        Editar
-                    </MenuItem>
-                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
-                        <Icon icon='ic:outline-delete' fontSize={20} color={theme.palette.error.main} />
-                        Eliminar
-                    </MenuItem>
-                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleAsigned}>
-                        <Icon icon='mdi:account-box-edit-outline' fontSize={20} color={theme.palette.primary.main} />
-                        Asignar personal
-                    </MenuItem>
-                    <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleAsigned}>
-                        <Icon icon='mdi:printer-outline' fontSize={20} color={theme.palette.secondary.main} />
-                        Imprimir
-                    </MenuItem>
+                    <Can I='update' a='shifts'>
+                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleEdit}>
+                            <Icon icon='mdi:pencil-outline' fontSize={20} color={theme.palette.info.main} />
+                            Editar
+                        </MenuItem>
+                    </Can>
+                    <Can I='delete' a='shifts'>
+                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
+                            <Icon icon='ic:outline-delete' fontSize={20} color={theme.palette.error.main} />
+                            Eliminar
+                        </MenuItem>
+                    </Can>
+                    <Can I='personal' a='shifts'>
+                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleAsigned}>
+                            <Icon icon='mdi:account-box-edit-outline' fontSize={20} color={theme.palette.primary.main} />
+                            Asignar personal
+                        </MenuItem>
+                    </Can>
+                    <Can I='print' a='shifts'>
+                        <MenuItem sx={{ '& svg': { mr: 2 } }} >
+                            <Icon icon='mdi:printer-outline' fontSize={20} color={theme.palette.secondary.main} />
+                            Imprimir
+                        </MenuItem>
+                    </Can>
                 </Menu>
             </>
         )
-    }
-
-    const dispatch = useDispatch<AppDispatch>()
-
-    const store = useSelector((state: RootState) => state.shits)
-
-    useEffect(() => {
-        dispatch(fetchData({ field, skip: page * pageSize, limit: pageSize }))
-    }, [page, pageSize])
-
-    const handleCreate = () => {
-        setMode('create')
-        setShitsData(defaultValues)
-        toggleDrawer()
-    }
-
-
-    const toggleDrawer = () => setDrawOpen(!drawOpen)
-    const handleFilters = async () => {
-        dispatch(fetchData({ field: field || dateFilter, skip: page * pageSize, limit: pageSize }))
-    }
-    const allData = async () => {
-        dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
-    }
-    const filterDate = (date: string) => {
-        setDateFilter(date)
-        dispatch(fetchData({ field: date, skip: page * pageSize, limit: pageSize }))
     }
     return (
         <Grid container spacing={6}>
@@ -256,27 +262,29 @@ const Shifts = () => {
 
                             <Button
                                 variant="outlined"
-                                onClick={handleFilters}
+                                onClick={() => handleFilters(field || dateFilter)}
                                 sx={{ height: 50 }}
                             >
                                 Buscar
                             </Button>
                             <Button
                                 variant="contained"
-                                onClick={allData}
+                                onClick={() => handleFilters('')}
                                 sx={{ height: 50 }}
                             >
                                 Todos
                             </Button>
                         </Box>
 
-                        <Button
-                            sx={{ height: 50 }}
-                            onClick={handleCreate}
-                            variant="contained"
-                        >
-                            Nuevo horario
-                        </Button>
+                        <Can I='create' a='shifts'>
+                            <Button
+                                sx={{ height: 50 }}
+                                onClick={handleCreate}
+                                variant="contained"
+                            >
+                                Nuevo horario
+                            </Button>
+                        </Can>
                     </Box>
 
                     <DataGrid
@@ -316,7 +324,7 @@ const Shifts = () => {
 }
 Shifts.acl = {
     action: 'read',
-    subject: 'turnos'
+    subject: 'shifts'
 }
 
 Shifts.authGuard = true;

@@ -106,7 +106,6 @@ const AppBarContent = (props: Props) => {
         <Can I='read' a='recibidos'>
           <NotificationDropdown notifications={notifications} />
         </Can>
-        {/* {ability.can('read', 'recibidos') && <NotificationDropdown notifications={notifications} />} */}
         <UserDropdown />
       </Box>
     </Box>
