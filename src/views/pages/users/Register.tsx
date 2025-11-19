@@ -240,6 +240,7 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                             type: 'manual',
                             message: 'Este correo ya está registrado'
                         });
+
                         return;
                     }
                 }
@@ -259,6 +260,7 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                         type: 'manual',
                         message: 'Este correo ya está registrado'
                     });
+
                     return;
                 }
 
@@ -278,6 +280,7 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
         reset()
         toggle()
     }
+
     return (<Box>
         <form autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
             <fieldset style={{ border: `1.5px solid ${theme.palette.primary.main}`, borderRadius: 10, paddingTop: 20 }}>

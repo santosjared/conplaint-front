@@ -99,6 +99,7 @@ const DetailsReceived = () => {
             }
         }
     }
+
     return (
         <Box sx={{ backgroundColor: theme => theme.palette.background.paper, p: 4, borderRadius: 2 }}>
             <Grid container spacing={2}>

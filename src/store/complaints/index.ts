@@ -14,6 +14,7 @@ export const fetchData = createAsyncThunk('complsintd/fetchData',
             const response = await instance.get('/complaints/type-complaints', {
                 params: filters,
             })
+
             return response.data
         } catch (e) {
             console.log(e)
@@ -22,6 +23,7 @@ export const fetchData = createAsyncThunk('complsintd/fetchData',
                 text: 'Se ha producido un error al intentar traer las denuncias. Contacte al desarrollador del sistema para más asistencia.',
                 icon: "error"
             });
+
             return null
         }
 
@@ -41,7 +43,8 @@ export const addComplaints = createAsyncThunk('complaints/addComplaints',
                 text: 'Datos guardados exitosamente',
                 icon: 'success'
             });
-            dispatch(fetchData(data.filters))
+            dispatch(fetchData(data.filters));
+
             return response
         } catch (e) {
             console.log(e)
@@ -67,7 +70,8 @@ export const updateComplaints = createAsyncThunk('complaints/updateComplaints',
                 text: 'Datos actualizados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filters))
+            dispatch(fetchData(data.filters));
+
             return response
         } catch (e) {
             console.log(e)
@@ -88,7 +92,8 @@ export const deleteComplaints = createAsyncThunk('complaints/deleteComplaints', 
             text: 'La denuncia fue eliminado exitosamente',
             icon: "success"
         });
-        dispatch(fetchData(data.filters))
+        dispatch(fetchData(data.filters));
+
         return response
     } catch (e) {
         console.log(e)

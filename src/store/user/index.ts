@@ -12,7 +12,8 @@ export const fetchData = createAsyncThunk('user/fetchUser',
         try {
             const response = await instance.get('/users', {
                 params: filters
-            })
+            });
+
             return response.data
         } catch (error) {
             Swal.fire({
@@ -21,6 +22,7 @@ export const fetchData = createAsyncThunk('user/fetchUser',
                 icon: "error"
             });
             console.log(error);
+
             return null
         }
 
@@ -36,7 +38,8 @@ export const addUser = createAsyncThunk('user/addUser',
                 text: 'Datos guardados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filters))
+            dispatch(fetchData(data.filters));
+
             return response
         } catch (e) {
             console.log(e)
@@ -58,7 +61,8 @@ export const updateUser = createAsyncThunk('user/updateUser',
                 text: 'Datos actualizados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filtrs))
+            dispatch(fetchData(data.filtrs));
+
             return response
         } catch (e) {
             console.log(e)
@@ -80,7 +84,8 @@ export const dowUser = createAsyncThunk('user/dowUser',
                 text: 'Usuario dado de baja',
                 icon: "success"
             });
-            dispatch(fetchData(data.filters))
+            dispatch(fetchData(data.filters));
+
             return response
         } catch (e) {
             console.log(e)
@@ -103,7 +108,8 @@ export const upUser = createAsyncThunk('user/upUser',
                 text: 'Usuario reincorporado',
                 icon: "success"
             });
-            dispatch(fetchData(data.filters))
+            dispatch(fetchData(data.filters));
+
             return response
         } catch (e) {
             console.log(e)

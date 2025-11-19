@@ -132,6 +132,7 @@ const Complaints = () => {
         setComplaintData(defaultValues)
         toggleDrawer()
     }
+
     return (
         <Card>
             <CardHeader title='Lista de denuncias' />

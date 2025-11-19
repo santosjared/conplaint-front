@@ -22,8 +22,10 @@ const CanViewNavGroup = (props: Props) => {
   const checkForVisibleChild = (arr: NavLink[] | NavGroup[]): boolean => {
     return arr.some((i: NavGroup) => {
       if (i.children) {
+
         return checkForVisibleChild(i.children)
       } else {
+
         return ability?.can(i.action, i.subject)
       }
     })
@@ -38,6 +40,7 @@ const CanViewNavGroup = (props: Props) => {
 
     return ability && ability.can(item.action, item.subject) && hasAnyVisibleChild
   }
+
   return navGroup && canViewMenuGroup(navGroup) ? <>{children}</> : null
 }
 

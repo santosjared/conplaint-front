@@ -1,6 +1,6 @@
 import Box from '@mui/material/Box'
 import IconButton from '@mui/material/IconButton'
-import { useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Icon from 'src/@core/components/icon'
 import { Settings } from 'src/@core/context/settingsContext'
 import ModeToggler from 'src/@core/layouts/components/shared-components/ModeToggler'
@@ -10,7 +10,6 @@ import { formatDistanceToNow, isYesterday } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useSocket } from 'src/hooks/useSocket'
 import getConfig from 'src/configs/environment'
-import { AbilityContext } from '../acl/Can'
 import Can from 'src/layouts/components/acl/Can'
 
 interface Props {
@@ -73,8 +72,6 @@ const AppBarContent = (props: Props) => {
   const { hidden, settings, saveSettings, toggleNavVisibility } = props
 
   const [notifications, setNotifications] = useState<NotificationsType[]>([])
-
-  const ability = useContext(AbilityContext)
 
   const { waitingComplaints } = useSocket()
 

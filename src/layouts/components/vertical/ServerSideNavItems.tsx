@@ -9,7 +9,7 @@ import { VerticalNavItemsType } from 'src/@core/layouts/types'
 
 const ServerSideNavItems = () => {
   // ** State
-  const [menuItems, setMenuItems] = useState<VerticalNavItemsType>([])
+  const [menuItems] = useState<VerticalNavItemsType>([])
 
   useEffect(() => {
     // axios.get('/api/vertical-nav/data').then(response => {

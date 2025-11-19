@@ -124,6 +124,7 @@ const Atender = () => {
     const handleChange = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
     };
+
     return (
         <Box sx={{ backgroundColor: theme => theme.palette.background.paper, p: 4, borderRadius: 2 }}>
             {atendidos ?

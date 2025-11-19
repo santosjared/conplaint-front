@@ -13,6 +13,7 @@ import Denuncia from "../../views/pages/asignados/denuncia";
 import { confirmarDenuncia, fetchData } from "src/store/asignes";
 import Can from "src/layouts/components/acl/Can";
 import Swal from 'sweetalert2';
+import { instance } from "src/configs/axios";
 
 interface ComplaintType {
     name: string
@@ -116,14 +117,13 @@ interface CellType {
     row: AtendidosType
 }
 
-
-
+const today = new Date().toISOString().split('T')[0]
 const Asigned = () => {
 
     const [pageSize, setPageSize] = useState<number>(10)
     const [page, setPage] = useState<number>(0)
     const [field, setField] = useState<string>('')
-    const [date, setDate] = useState<string>('')
+    const [date, setDate] = useState<string>(today)
     const [openDetails, setOpenDetails] = useState<boolean>(false)
     const [dataDetails, setDataDetails] = useState<UserPatrolsType[]>([])
     const [confirmed, setConfirmed] = useState<DenunciaType | null>(null)
@@ -165,6 +165,21 @@ const Asigned = () => {
         toggleConfirmed()
     }
 
+    const handlePrint = async () => {
+        try {
+            const response = await instance.get('/asignados/print', {
+                params: { date }
+            })
+            console.log(response.data)
+        } catch (e) {
+            Swal.fire({
+                title: '¡Error!',
+                text: 'Se ha producido un error al intentar imprimir el reporte. Contacte al desarrollador del sistema para más asistencia.',
+                icon: "error"
+            });
+        }
+    }
+
     const columns = [
         {
             flex: 0.2,
@@ -173,6 +188,7 @@ const Asigned = () => {
             sortable: false,
             headerName: ' Fecha y hora de asignación',
             renderCell: ({ row }: CellType) => {
+
                 return (
                     <Box display="flex" flexDirection="column" alignItems="center">
                         <Typography variant="h6" noWrap>
@@ -194,6 +210,7 @@ const Asigned = () => {
             headerName: 'Usuario que reportó',
             renderCell: ({ row }: CellType) => {
                 const { complaint } = row
+
                 return (
                     <Box>
                         <Typography variant='body2' noWrap>{complaint?.userId?.name} {complaint?.userId?.lastName}</Typography>
@@ -211,6 +228,7 @@ const Asigned = () => {
             headerName: 'Tipo de denuncia',
             renderCell: ({ row }: CellType) => {
                 const { complaint } = row
+
                 return (
                     <Typography variant='body2' noWrap>{complaint?.otherComplaints || complaint?.complaints?.name}</Typography>
                 )
@@ -224,6 +242,7 @@ const Asigned = () => {
             headerName: 'Agresor',
             renderCell: ({ row }: CellType) => {
                 const { complaint } = row
+
                 return (
                     <Typography variant='body2' noWrap>{complaint?.otherAggressor || complaint?.aggressor?.name}</Typography>
                 )
@@ -237,6 +256,7 @@ const Asigned = () => {
             headerName: 'Víctima',
             renderCell: ({ row }: CellType) => {
                 const { complaint } = row
+
                 return (
                     <Typography variant='body2' noWrap>{complaint?.otherVictim || complaint?.victim?.name}</Typography>
                 )
@@ -250,6 +270,7 @@ const Asigned = () => {
             headerName: 'Lugar del hecho',
             renderCell: ({ row }: CellType) => {
                 const { complaint } = row
+
                 return (
                     <Typography variant='body2' noWrap>{complaint.place}</Typography>
                 )
@@ -277,6 +298,7 @@ const Asigned = () => {
             sortable: false,
             headerName: 'Acciones',
             renderCell: ({ row }: CellType) => {
+
                 return (
                     <>
                         {row.status === 'success' ?
@@ -337,7 +359,16 @@ const Asigned = () => {
                                             Todos
                                         </Button>
                                         <Can I="print" a="asignes">
-                                            <Button variant="contained" color="error" sx={{ ml: 3, p: 3.5 }} startIcon={<Icon icon='mdi:printer-outline' />}>Reporte</Button>
+                                            <Button
+                                                variant="contained"
+                                                color="error"
+                                                sx={{ ml: 3, p: 3.5 }}
+                                                onClick={handlePrint}
+                                                startIcon={
+                                                    <Icon icon='mdi:printer-outline'
+                                                    />}>
+                                                Reporte
+                                            </Button>
                                         </Can>
                                     </Grid>
                                 </Grid>
@@ -355,8 +386,9 @@ const Asigned = () => {
                                 rowCount={store.total}
                                 paginationMode="server"
                                 onPageChange={(newPage) => setPage(newPage)}
-                                onCellClick={(params, event) => {
+                                onCellClick={(params) => {
                                     if (params.field === 'actions') {
+
                                         return
                                     }
                                     setDataDetails(params.row.userpatrol)

@@ -13,6 +13,7 @@ export const fetchData = createAsyncThunk('rol/fetchRol',
             const response = await instance.get('/roles', {
                 params: filters
             })
+
             return response.data
         } catch (e) {
             console.log(e)
@@ -38,6 +39,7 @@ export const addRol = createAsyncThunk('rol/addRol',
                 icon: "success"
             });
             dispatch(fetchData(data.filters))
+
             return response
         } catch (e) {
             console.log(e)
@@ -59,7 +61,8 @@ export const updateRol = createAsyncThunk('rol/updateRol',
                 text: 'Datos actualizados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filters))
+            dispatch(fetchData(data.filters));
+
             return response
         } catch (e) {
             console.log(e)
@@ -80,7 +83,8 @@ export const deleteRol = createAsyncThunk('rol/deleteRol', async (data: { [key: 
             text: 'El rol fue eliminado exitosamente',
             icon: "success"
         });
-        dispatch(fetchData(data.filters))
+        dispatch(fetchData(data.filters));
+
         return response
     } catch (e) {
         console.log(e)

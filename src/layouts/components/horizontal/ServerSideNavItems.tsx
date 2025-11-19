@@ -9,7 +9,7 @@ import { HorizontalNavItemsType } from 'src/@core/layouts/types'
 
 const ServerSideNavItems = () => {
   // ** State
-  const [menuItems, setMenuItems] = useState<HorizontalNavItemsType>([])
+  const [menuItems] = useState<HorizontalNavItemsType>([])
 
   useEffect(() => {
     // axios.get('/api/horizontal-nav/data').then(response => {

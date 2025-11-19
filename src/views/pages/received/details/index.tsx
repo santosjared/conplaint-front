@@ -98,6 +98,7 @@ const DetailsReceived = ({ data, toggle, page, pageSize, activeTab }: DetailsRec
                 )
         }
     }
+
     return (
         <Box sx={{ backgroundColor: theme => theme.palette.background.paper, p: 4, borderRadius: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'end', mb: 4 }}>

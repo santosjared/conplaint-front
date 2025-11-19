@@ -10,8 +10,7 @@ const Footer = () => {
         zIndex: 10,
         bottom: -1,
         position: 'sticky',
-        px: [4, 6]
-
+        px: [4, 6],
       }}
     >
       <Watermark />

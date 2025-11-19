@@ -12,6 +12,7 @@ export const fetchData = createAsyncThunk('atendidos/fetchatendidos',
         const response = await instance.get('/atendidos', {
             params: filters
         })
+
         return response.data
     }
 );
@@ -27,6 +28,7 @@ export const updateAtendios = createAsyncThunk('atendidos/updateatendidos',
                 confirmButtonText: 'Aceptar'
             });
             dispatch(fetchData(data.filters))
+
             return response
         } catch (e) {
             console.log(e)

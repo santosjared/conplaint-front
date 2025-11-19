@@ -1,7 +1,5 @@
-import { useContext } from 'react'
-import { AbilityContext } from 'src/layouts/components/acl/Can'
 import Typography from '@mui/material/Typography'
-import { Alert, Box, BoxProps, Card, CardContent, styled } from '@mui/material'
+import { Alert, Box, BoxProps, styled } from '@mui/material'
 
 const BoxWrapper = styled(Box)<BoxProps>(({ theme }) => ({
   [theme.breakpoints.down('md')]: {
@@ -10,7 +8,6 @@ const BoxWrapper = styled(Box)<BoxProps>(({ theme }) => ({
 }))
 
 const ACLPage = () => {
-  const ability = useContext(AbilityContext)
 
   return (
     <Box className='content-center'>

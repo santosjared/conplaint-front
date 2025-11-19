@@ -53,7 +53,7 @@ const navigation = (): VerticalNavItemsType => {
       icon: 'mdi:calendar-check',
     },
     {
-      title: 'Denucnias asignadas',
+      title: 'Denuncias asignadas',
       path: '/assigned',
       subject: 'asignes',
       action: 'read',

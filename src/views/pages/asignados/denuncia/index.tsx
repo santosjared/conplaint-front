@@ -51,6 +51,7 @@ const Denuncia = ({ open, toggle, confirmed }: Props) => {
 
     const [year, month, day] = confirmed?.fecha_hecho.split('-') || [];
     const formatted = `${day}/${month}/${year}`;
+
     return (
         <Dialog
             fullWidth

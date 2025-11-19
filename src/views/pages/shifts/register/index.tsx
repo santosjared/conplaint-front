@@ -54,6 +54,7 @@ interface Props {
 const showErrors = (field: string, valueLen: number, min: number) => {
     if (valueLen === 0) return `El campo ${field} es requerido`
     if (valueLen > 0 && valueLen < min) return `El campo ${field} debe tener al menos ${min} caracteres`
+
     return ''
 }
 

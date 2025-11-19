@@ -21,8 +21,6 @@ import { useAuth } from 'src/hooks/useAuth'
 import themeConfig from 'src/configs/themeConfig'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 import Footer from 'src/@core/layouts/components/shared-components/footer'
-import { useDispatch } from 'react-redux'
-import { AppDispatch } from 'src/store'
 
 const Wrapper = styled(Box)<BoxProps>(({ theme }) => ({
   width: '100%',

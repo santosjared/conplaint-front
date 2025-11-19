@@ -24,3 +24,7 @@ export const buildAbilityFor = (permission: Permission[]): AppAbility => {
   return createMongoAbility(rules);
 };
 
+export const defaultACLObj: ACLObj = {
+  action: 'manage',
+  subject: 'all'
+}

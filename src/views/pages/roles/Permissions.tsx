@@ -56,6 +56,7 @@ const Permissions = ({ open, toggle, rol, page, pageSize }: Props) => {
 
     const isActionEnabled = useCallback((action: Actions, subject: Subjects): boolean => {
         const permission = per.find(p => p.subject === subject);
+
         return permission?.action.includes(action) || false;
     }, [per]);
 
@@ -71,8 +72,10 @@ const Permissions = ({ open, toggle, rol, page, pageSize }: Props) => {
 
                 const updated = [...prev];
                 updated[idx] = { subject, action: newActions };
+
                 return updated;
             } else {
+
                 return [...prev, { subject, action: [action] }];
             }
         });
@@ -90,8 +93,12 @@ const Permissions = ({ open, toggle, rol, page, pageSize }: Props) => {
 
     const handleSave = async () => {
         setLoading(true);
+        const validSubjects = permissions.map(p => p.subject);
+
+        const filteredToSend = per.filter(p => validSubjects.includes(p.subject));
+
         try {
-            await instance.put(`/roles/asigne-permissions/${rol._id}`, { permissions: per });
+            await instance.put(`/roles/asigne-permissions/${rol._id}`, { permissions: filteredToSend });
 
             dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
             Swal.fire({
@@ -437,7 +444,7 @@ const Permissions = ({ open, toggle, rol, page, pageSize }: Props) => {
                                         label='leer'
                                         control={<Checkbox
                                             checked={isActionEnabled('read', 'asignes')}
-                                            onChange={() => handleToggle('confirmed', 'asignes')}
+                                            onChange={() => handleToggle('read', 'asignes')}
                                         />}
                                     />
                                 </TableCell>

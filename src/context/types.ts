@@ -1,7 +1,7 @@
 export type ErrCallbackType = (err: { [key: string]: string }) => void
 
-export type Actions = 'create' | 'read' | 'update' | 'delete' | 'permissions' | 'personal' | 'print' | 'acepted' | 'refused' | 'confirmed' | 'look'
-export type Subjects = 'dashboard' | 'users' | 'roles' | 'shifts' | 'vehicles' | 'complaints' | 'recibidos' | 'asignes' | 'atender'
+export type Actions = 'create' | 'read' | 'update' | 'delete' | 'permissions' | 'personal' | 'print' | 'acepted' | 'refused' | 'confirmed' | 'look' | 'manage'
+export type Subjects = 'dashboard' | 'users' | 'roles' | 'shifts' | 'vehicles' | 'complaints' | 'recibidos' | 'asignes' | 'atender' | 'all'
 
 export type LoginParams = {
   email: string
@@ -27,7 +27,7 @@ export type Rol = {
   permissions: Permission[],
   description: string
   _id: string
-  __v?: string
+  __v: string
 }
 
 export type UserDataType = {

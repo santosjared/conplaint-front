@@ -13,6 +13,7 @@ export const fetchData = createAsyncThunk('patrols/fetchPatrols',
             const response = await instance.get('/patrols', {
                 params: filters
             })
+
             return response.data
         } catch (e) {
             console.log(e);
@@ -21,6 +22,7 @@ export const fetchData = createAsyncThunk('patrols/fetchPatrols',
                 text: 'Se ha producido un error al intentar traer los vehículod de patrullas. Contacte al desarrollador del sistema para más asistencia.',
                 icon: "error"
             });
+
             return null
         }
     }
@@ -35,7 +37,8 @@ export const addPatrols = createAsyncThunk('patrols/addPatrols',
                 text: 'Datos guardados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filters))
+            dispatch(fetchData(data.filters));
+
             return response
         } catch (e) {
             console.log(e)
@@ -57,7 +60,8 @@ export const updatePatrols = createAsyncThunk('patrols/updatePatrols',
                 text: 'Datos actualizados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filters))
+            dispatch(fetchData(data.filters));
+
             return response
         } catch (e) {
             console.log(e)
@@ -78,7 +82,8 @@ export const deletePatrols = createAsyncThunk('patrols/deletePatrols', async (da
             text: 'El vehículo de radio patrullas fue eliminado exitosamente',
             icon: "success"
         });
-        dispatch(fetchData(data.filters))
+        dispatch(fetchData(data.filters));
+
         return response
     } catch (e) {
         console.log(e)

@@ -109,15 +109,19 @@ const schema = yup.object().shape({
     image: yup
         .mixed<File>()
         .test('fileSize', 'El archivo es muy grande (máximo 2 MB)', value => {
+
             if (!value) return true
+
             return (value as File).size <= 12 * 1024 * 1024 // 2 MB
         })
         .test('fileType', 'Formato no soportado (solo JPG/PNG)', value => {
             if (!value) return true
+
             return ['image/jpeg', 'image/png', 'image/jpg'].includes((value as File).type)
         })
         .test('fileName', 'El nombre del archivo es demasiado largo', value => {
             if (!value) return true
+
             return (value as File).name.length <= 100
         })
         .notRequired(),
@@ -224,12 +228,15 @@ const AddVehicle = ({ toggle, mode = 'create', defaultValues, page, pageSize }: 
         }
 
         if (mode === 'edit' && defaultValues?._id) {
+
             dispatch(updatePatrols({ data: formData, id: defaultValues._id, filters: { skip: page * pageSize, limit: pageSize } }))
         } else {
+
             dispatch(addPatrols({ data: formData, filters: { skip: page * pageSize, limit: pageSize } }))
         }
         handleReset()
     }
+
     return (
         <Box>
             <form autoComplete="off" onSubmit={handleSubmit(onSubmit)}>

@@ -8,7 +8,7 @@ import Spinner from 'src/@core/components/spinner'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 import { useSelector } from 'react-redux'
 import { RootState } from 'src/store'
-import { createMongoAbility } from '@casl/ability' // para crear una habilidad vacía
+import { createMongoAbility } from '@casl/ability'
 
 interface AclGuardProps {
   children: ReactNode
@@ -31,6 +31,8 @@ const AclGuard = ({ children, guestGuard, aclAbilities }: AclGuardProps) => {
     }
     setLoading(false)
   }, [user])
+
+
   return (
     <AbilityContext.Provider value={ability || emptyAbility}>
       {guestGuard || ['/404', '/500', '/'].includes(router.route) ? (

@@ -21,11 +21,6 @@ interface Services {
     name: string;
 }
 
-interface GradeType {
-    _id?: string
-    name: string;
-}
-
 interface UserService {
     services: Services | null,
     zone: ZoneType | null,

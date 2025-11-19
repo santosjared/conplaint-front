@@ -1,6 +1,6 @@
 import { createContext, useEffect, useState, ReactNode } from 'react'
 import { useRouter } from 'next/router'
-import { AuthValuesType, LoginParams, ErrCallbackType, UserDataType } from './types'
+import { AuthValuesType, LoginParams, ErrCallbackType } from './types'
 import { instance } from 'src/configs/axios'
 import authConfig from 'src/configs/auth'
 import { useDispatch } from 'react-redux'

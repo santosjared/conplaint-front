@@ -40,7 +40,9 @@ export const ImageContainer = ({ src, alt }: ImageContainerProps) => {
         };
 
         document.addEventListener('fullscreenchange', onChange);
+
         return () => document.removeEventListener('fullscreenchange', onChange);
+
     }, []);
 
     return (

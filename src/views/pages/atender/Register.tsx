@@ -352,7 +352,7 @@ const AddDenuncias = ({ toggle, atendido, fetch }: Props) => {
                                     name="encargado"
                                     control={control}
                                     rules={{ required: true }}
-                                    render={({ field: { value, onChange } }) => (
+                                    render={({ field: { onChange } }) => (
                                         <TextField
                                             label='Encargado'
                                             onChange={onChange}

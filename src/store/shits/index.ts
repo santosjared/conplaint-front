@@ -12,7 +12,8 @@ export const fetchData = createAsyncThunk('shits/fetchShits',
         try {
             const response = await instance.get('/shits', {
                 params: filters
-            })
+            });
+
             return response.data
         } catch (e) {
             console.log(e)
@@ -36,7 +37,8 @@ export const addShit = createAsyncThunk('shits/addShit',
                 text: 'Datos guardados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filters))
+            dispatch(fetchData(data.filters));
+
             return response
         } catch (e) {
             console.log(e)
@@ -58,7 +60,8 @@ export const updateShit = createAsyncThunk('shits/updateShit',
                 text: 'Datos actualizados exitosamente',
                 icon: "success"
             });
-            dispatch(fetchData(data.filters))
+            dispatch(fetchData(data.filters));
+
             return response
         } catch (e) {
             console.log(e)
@@ -79,7 +82,8 @@ export const deleteShit = createAsyncThunk('shits/deleteShit', async (data: { [k
             text: 'El turno fue eliminado exitosamente',
             icon: "success"
         });
-        dispatch(fetchData(data.filters))
+        dispatch(fetchData(data.filters));
+
         return response
     } catch (e) {
         console.log(e)

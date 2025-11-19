@@ -45,7 +45,9 @@ const schema = yup.object().shape({
         .string()
         .notRequired()
         .test('minLength', 'La descripción debe tener al menos 10 caracteres', (value) => {
+
             if (!value) return true;
+
             return value.length >= 10;
         })
         .max(1000, 'La descripción no debe pasar de los 1000 caracteres'),
@@ -54,11 +56,15 @@ const schema = yup.object().shape({
         .mixed()
         .notRequired()
         .test('fileType', 'Solo se permiten archivos de imagen', (value) => {
+
             if (!value) return true;
+
             return value.type?.startsWith('image/');
         })
         .test('fileSize', 'La imagen no debe superar los 12 MB', (value) => {
+
             if (!value) return true;
+
             return value.size <= 12 * 1024 * 1024;;
         })
 });
@@ -110,12 +116,14 @@ const AddComplaints = ({ toggle, mode = 'create', defaultValues, page, limit }: 
     const onSubmit = (data: ComplaintsType) => {
         if (mode === 'edit' && defaultValues?._id) {
             delete data._id;
+
             dispatch(updateComplaints({ data, id: defaultValues._id, filters: { skip: (page - 1) * limit, limit } }))
         } else {
             dispatch(addComplaints({ data, filters: { skip: (page - 1) * limit, limit } }))
         }
         handleReset()
     }
+
     return (
         <Box>
             <form autoComplete="off" onSubmit={handleSubmit(onSubmit)}>

@@ -1,5 +1,3 @@
-import { Direction } from '@mui/material'
-
 import {
   Mode,
   VerticalNavToggle,

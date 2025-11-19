@@ -31,6 +31,7 @@ export const useInterceptor = () => {
             if (token && config.headers) {
                 config.headers['Authorization'] = `Bearer ${token}`;
             }
+
             return config;
         },
         (error) => Promise.reject(error)
@@ -48,13 +49,16 @@ export const useInterceptor = () => {
                 const refresh_token = state.auth.refresh_token;
                 const rememberMe = state.auth.user?.rememberMe || false;
                 if (!refresh_token) {
+
                     return Promise.reject(error);
                 }
                 if (isRefreshing) {
+
                     return new Promise((resolve, reject) => {
                         failedQueue.push({ resolve, reject });
                     })
                         .then((token) => {
+
                             return instance({
                                 ...originalRequest,
                                 headers: {
@@ -75,6 +79,7 @@ export const useInterceptor = () => {
                     const newToken = result.data.access_token;
                     store.dispatch(setUser({ user: newUser, token: newToken, refresh_token: result.data.refresh_token }));
                     processQueue(null, newToken);
+
                     return instance({
                         ...originalRequest,
                         headers: {
@@ -84,6 +89,7 @@ export const useInterceptor = () => {
                     });
                 } catch (refreshError) {
                     processQueue(refreshError, null);
+
                     return Promise.reject(refreshError);
                 } finally {
                     isRefreshing = false;

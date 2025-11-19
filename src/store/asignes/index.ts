@@ -13,6 +13,7 @@ export const fetchData = createAsyncThunk('asignados/fetchAsignados',
             const response = await instance.get('/asignados', {
                 params: filters
             })
+
             return response.data
         } catch (e) {
             console.log(e);
@@ -21,6 +22,7 @@ export const fetchData = createAsyncThunk('asignados/fetchAsignados',
                 text: 'Se ha producido un error al intentar traer denuncias asignadas. Contacte al desarrollador del sistema para más asistencia.',
                 icon: "error"
             });
+
             return null
         }
     }
@@ -36,6 +38,7 @@ export const confirmarDenuncia = createAsyncThunk('asignados/confirmedAsignados'
                 icon: "success"
             });
             dispatch(fetchData(data.filters))
+
             return response
         } catch (e) {
             console.log(e)

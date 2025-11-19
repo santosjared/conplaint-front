@@ -60,7 +60,9 @@ const defaultProvider: SocketContextType = {
     allComplaints: [],
     denuncias: [],
     total_denuncias: [],
-    getData: () => { }
+    getData: () => {
+        console.warn("getData called before SocketProvider initialized");
+    }
 }
 
 export const SocketContext = createContext<SocketContextType>(defaultProvider)
@@ -82,6 +84,7 @@ export const SocketProvider = ({ children }: Props) => {
     })
 
     const getData = () => {
+
         socket.emit("emitNotification")
     }
 

@@ -13,6 +13,8 @@ import AddShits from '../../views/pages/shifts/register'
 import { deleteShit, fetchData } from 'src/store/shits'
 import { useRouter } from 'next/router'
 import Can from 'src/layouts/components/acl/Can'
+import { instance } from 'src/configs/axios'
+import { PDFPersonal } from 'src/utils/pdf-personal'
 
 
 const today = new Date().toISOString().split('T')[0]
@@ -82,6 +84,7 @@ const Shifts = () => {
         dispatch(fetchData({ field: date, skip: page * pageSize, limit: pageSize }))
     }
 
+
     const columns = [
         {
             flex: 0.2,
@@ -116,6 +119,7 @@ const Shifts = () => {
             renderCell: ({ row }: CellType) => {
                 const [year, month, day] = row.date.split('-');
                 const formatted = `${day}/${month}/${year}`;
+
                 return (
                     <Typography variant='body2' noWrap>{formatted}</Typography>
                 )
@@ -174,6 +178,23 @@ const Shifts = () => {
             router.push(`/shifts/asignar/${shits._id}`)
         }
 
+        const handleprint = async () => {
+            setAnchorEl(null);
+            try {
+                const res = await instance.get(`/shits/${shits._id}`);
+                const sup = await instance.get('/users/sup', { params: { grade: 'CNL. MSc. CAD.' } })
+                PDFPersonal(res.data, sup.data)
+
+            } catch (e) {
+                console.log(e);
+                Swal.fire({
+                    title: '¡Error!',
+                    text: 'Se ha producido un error al intentar generar pdf de horarios. Contacte al desarrollador del sistema para más asistencia.',
+                    icon: "error"
+                });
+            }
+        }
+
         return (
             <>
                 <IconButton size='small' onClick={handleRowOptionsClick}>
@@ -213,7 +234,7 @@ const Shifts = () => {
                         </MenuItem>
                     </Can>
                     <Can I='print' a='shifts'>
-                        <MenuItem sx={{ '& svg': { mr: 2 } }} >
+                        <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleprint}>
                             <Icon icon='mdi:printer-outline' fontSize={20} color={theme.palette.secondary.main} />
                             Imprimir
                         </MenuItem>
@@ -222,6 +243,7 @@ const Shifts = () => {
             </>
         )
     }
+
     return (
         <Grid container spacing={6}>
             <Grid item xs={12}>

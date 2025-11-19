@@ -17,16 +17,6 @@ interface Props {
     defaultValues?: Rol
 }
 
-const showErrors = (field: string, valueLen: number, min: number) => {
-    if (valueLen === 0) {
-        return `El campo ${field} es requerido`
-    } else if (valueLen > 0 && valueLen < min) {
-        return `El campo ${field} debe tener al menos ${min} caracteres`
-    } else {
-        return ''
-    }
-}
-
 const AddRol = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Props) => {
     const schema = yup.object().shape({
         name: yup
@@ -64,16 +54,28 @@ const AddRol = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Prop
     }, [defaultValues, mode])
 
     const onSubmit = (data: Rol) => {
+
+        const newData = {
+            name: data.name,
+            description: data.description,
+        };
+
         if (mode === 'edit' && defaultValues?._id) {
-            const { _id, __v, permissions, ...newData } = data
-            dispatch(updateRol({ data: newData, id: defaultValues._id, filtrs: { skip: page * pageSize, limit: pageSize } }))
+            dispatch(updateRol({
+                data: newData,
+                id: defaultValues._id,
+                filtrs: { skip: page * pageSize, limit: pageSize }
+            }));
         } else {
-            const { _id, __v, permissions, ...newData } = data
-            dispatch(addRol({ data: newData, filtrs: { skip: page * pageSize, limit: pageSize } }))
+            dispatch(addRol({
+                data: newData,
+                filtrs: { skip: page * pageSize, limit: pageSize }
+            }));
         }
-        toggle()
-        reset()
-    }
+
+        toggle();
+        reset();
+    };
 
     const handleOnclickCancel = () => {
         reset()

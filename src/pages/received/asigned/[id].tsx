@@ -142,7 +142,6 @@ const MenuAsigned = () => {
         const index = parseInt(activeTab)
         const newTabs = [...tabs]
         newTabs[index] = { ...newTabs[index], user: users }
-        console.log(users)
         setTabs(newTabs)
         togglePersonal()
     }
@@ -186,7 +185,7 @@ const MenuAsigned = () => {
                     complaint: id,
                     userpatrol: newdata
                 };
-                const response = await instance.post('/atendidos', data);
+                await instance.post('/atendidos', data);
                 await Swal.fire({
                     title: '¡Guardado exitosamente!',
                     text: 'Las patrullas fueron asignadas correctamente.',
@@ -220,6 +219,7 @@ const MenuAsigned = () => {
             router.back();
         }
     }
+
     return (
         <Box
             sx={{

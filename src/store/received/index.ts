@@ -22,8 +22,9 @@ export const fetchData = createAsyncThunk('antendidos/fetchData',
         try {
             const response = await instance.get('/atendidos', {
                 params: filters
-            })
-            return response.data
+            });
+
+            return response.data;
         } catch (e) {
             console.log(e);
             Swal.fire({
@@ -31,6 +32,7 @@ export const fetchData = createAsyncThunk('antendidos/fetchData',
                 text: 'Estamos teniendo problemas al traer las denuncias. Por favor contacte al desarrollador del sistema para más asistencia.',
                 icon: "error"
             });
+
             return null
         }
     }
@@ -39,7 +41,8 @@ export const fetchData = createAsyncThunk('antendidos/fetchData',
 export const refusedComplaints = createAsyncThunk('atendidos/refusedComplaints', async ({ status, skip, limit, id }: RefuseProps, { dispatch }: Redux) => {
     try {
         const response = await instance.delete(`/atendidos/${id}`);
-        dispatch(fetchData({ status, skip, limit }))
+        dispatch(fetchData({ status, skip, limit }));
+
         return response.data
     } catch (e) {
         console.log(e);
@@ -48,6 +51,7 @@ export const refusedComplaints = createAsyncThunk('atendidos/refusedComplaints',
             text: 'Estamos teniendo problemas al rechazar la denuncia. Por favor contacte al desarrollador del sistema para más asistencia.',
             icon: "error"
         });
+
         return null
     }
 })

@@ -11,7 +11,7 @@ import {
     Fade,
     Checkbox,
 } from '@mui/material'
-import { forwardRef, ReactElement, Ref, useCallback, useEffect, useMemo, useState } from 'react'
+import { forwardRef, Ref, useCallback, useEffect, useMemo, useState } from 'react'
 import { instance } from 'src/configs/axios'
 import { UserType } from 'src/types/types'
 import Icon from 'src/@core/components/icon'
@@ -116,7 +116,8 @@ const AddPersonal = ({ open, toggle, onSelect, tabs, currentIndex }: AddPersonal
     const handleToggleUser = (userId: string) => {
         setSelectedUsers(prev => {
             const newSet = new Set(prev)
-            newSet.has(userId) ? newSet.delete(userId) : newSet.add(userId)
+            newSet.has(userId) ? newSet.delete(userId) : newSet.add(userId);
+
             return newSet
         })
     }
@@ -214,8 +215,9 @@ const AddPersonal = ({ open, toggle, onSelect, tabs, currentIndex }: AddPersonal
                                                         <Grid item xs={12}>
                                                             {service?.users
                                                                 ?.filter((user) => !assignedUsers.has(user._id))
-                                                                ?.map((user, idx) => {
+                                                                ?.map((user) => {
                                                                     const userId = user._id
+
                                                                     return (
                                                                         <Grid container spacing={1} key={userId}>
                                                                             <Grid item xs={1}>
