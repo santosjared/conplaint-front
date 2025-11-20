@@ -124,8 +124,8 @@ const Complaints = () => {
 
     const toggleDrawer = () => setDrawOpen(!drawOpen)
 
-    const handleFilters = (filter: string) => {
-        dispatch(fetchData({ filter, skip: (page - 1) * limit, limit }))
+    const handleFilters = (field: string) => {
+        dispatch(fetchData({ field, skip: (page - 1) * limit, limit }))
     }
     const handleCreate = () => {
         setMode('create')

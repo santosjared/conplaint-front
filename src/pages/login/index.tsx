@@ -210,14 +210,14 @@ const LoginPage = () => {
                   <Typography
                     variant='body2'
                     component={Link}
-                    href='/forgot-password'
+                    href='#'
                     sx={{ color: 'primary.main', textDecoration: 'none' }}
                   >
                     ¿Olvidaste tu contraseña?
                   </Typography>
                 </Box>
                 <Button fullWidth size='large' type='submit' variant='contained' sx={{ mb: 7 }}>
-                  Ininiar Sesión
+                  Iniciar Sesión
                 </Button>
               </form>
             </BoxWrapper>

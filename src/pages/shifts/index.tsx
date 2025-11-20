@@ -48,7 +48,10 @@ const defaultValues: ShiftsType = {
     grade: { name: '', _id: '' },
     otherGrade: '',
     supervisor: '',
-    hrs: [],
+    hrs: [
+        { name: '', hrs_i: '08:00', hrs_s: '12:00' },
+        { name: '', hrs_i: '14:00', hrs_s: '18:00' },
+    ],
 }
 const Shifts = () => {
 
@@ -78,10 +81,6 @@ const Shifts = () => {
     const toggleDrawer = () => setDrawOpen(!drawOpen)
     const handleFilters = async (filter: string) => {
         dispatch(fetchData({ field: filter, skip: page * pageSize, limit: pageSize }))
-    }
-    const filterDate = (date: string) => {
-        setDateFilter(date)
-        dispatch(fetchData({ field: date, skip: page * pageSize, limit: pageSize }))
     }
 
 
@@ -279,7 +278,7 @@ const Shifts = () => {
                                 autoComplete="off"
                                 InputLabelProps={{ shrink: true }}
                                 value={dateFilter}
-                                onChange={(e) => filterDate(e.target.value)}
+                                onChange={(e) => setDateFilter(e.target.value)}
                             />
 
                             <Button

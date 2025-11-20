@@ -319,7 +319,7 @@ const Recibidos = () => {
                                                 label="Buscar por fecha"
                                                 type="date"
                                                 value={date}
-                                                onChange={(e) => { setDate(e.target.value); search(e.target.value) }}
+                                                onChange={(e) => setDate(e.target.value)}
                                                 InputLabelProps={{ shrink: true }}
                                             />
                                         </FormControl>

@@ -87,7 +87,6 @@ export const SocketProvider = ({ children }: Props) => {
 
         socket.emit("emitNotification")
     }
-
     useEffect(() => {
         const handleData = (data: {
             waitingComplaints: ComplaintsType[]
@@ -95,8 +94,12 @@ export const SocketProvider = ({ children }: Props) => {
             denuncias: DenunciasType[]
             total_denuncias: TotalType[]
         }) => {
-            setWaitingComplaints(data.waitingComplaints || [])
-            setAllComplaints(data.allComplaints || [])
+            const sortByDate = <T extends { createdAt: string }>(arr: T[]) =>
+                [...arr].sort(
+                    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                )
+            setWaitingComplaints(sortByDate(data.waitingComplaints || []))
+            setAllComplaints(sortByDate(data.allComplaints || []))
             setDenuncias(data.denuncias || [])
             setTotal_denuncias(data.total_denuncias || [])
         }

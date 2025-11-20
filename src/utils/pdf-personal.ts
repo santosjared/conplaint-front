@@ -139,13 +139,11 @@ export const PDFPersonal = (horario: ShiftsType | null, sub: UserType) => {
         nextLine(15);
     });
 
-    // ------------ FIRMAS ------------
-    nextLine(20);
+    nextLine(30);
     addText(fullName(sub), marginLeft, 11, "bold");
     nextLine(14);
     addText("COMANDANTE DE RADIO PATRULLAS 110", marginLeft);
 
-    // ------------ EXPORTAR ------------
     const blob = doc.output("blob");
     const url = URL.createObjectURL(blob);
     window.open(url);

@@ -13,19 +13,20 @@ const Footer = () => {
         px: [4, 6],
       }}
     >
-      <Watermark />
       <Box
         component='img'
         src='/images/pages/footer.jpeg'
-        alt="footer"
+        alt='footer'
         sx={{
           height: { xs: 31, sm: 51 },
           width: '100%',
           borderTopLeftRadius: 14,
           borderTopRightRadius: 14,
-          display: 'block'
+          display: 'block',
+          position: 'relative',
         }}
       />
+      <Watermark />
     </Box>
   )
 }

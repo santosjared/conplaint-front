@@ -14,6 +14,7 @@ import { confirmarDenuncia, fetchData } from "src/store/asignes";
 import Can from "src/layouts/components/acl/Can";
 import Swal from 'sweetalert2';
 import { instance } from "src/configs/axios";
+import { PDFReporte } from "src/utils/pdf-reporte";
 
 interface ComplaintType {
     name: string
@@ -39,6 +40,7 @@ interface DenunciaType {
     hora_hecho: string
     lugar_hecho: string
     tipo_denuncia: ComplaintType | null
+    isNegative: boolean
     infractores: Infractor[]
     description: string
 }
@@ -136,7 +138,6 @@ const Asigned = () => {
 
     const store = useSelector((state: RootState) => state.asignados)
     const theme = useTheme()
-
     useEffect(() => {
         dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
     }, [page, pageSize])
@@ -170,8 +171,11 @@ const Asigned = () => {
             const response = await instance.get('/asignados/print', {
                 params: { date }
             })
-            console.log(response.data)
+            const sup = await instance.get('/users/sup', { params: { grade: 'CNL. MSc. CAD.' } })
+            const { result, despachadores } = response.data
+            PDFReporte(result, despachadores, sup.data)
         } catch (e) {
+            console.log(e)
             Swal.fire({
                 title: '¡Error!',
                 text: 'Se ha producido un error al intentar imprimir el reporte. Contacte al desarrollador del sistema para más asistencia.',
@@ -346,7 +350,7 @@ const Asigned = () => {
                                                 label="Buscar por fecha"
                                                 type="date"
                                                 value={date}
-                                                onChange={(e) => { setDate(e.target.value); search(e.target.value) }}
+                                                onChange={(e) => setDate(e.target.value)}
                                                 InputLabelProps={{ shrink: true }}
                                             />
                                         </FormControl>

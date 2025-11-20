@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardContent, CardHeader, Dialog, DialogActions, DialogContent, Divider, Grid, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, CardHeader, Chip, Dialog, DialogActions, DialogContent, Divider, Grid, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 import { forwardRef } from "react";
 import Icon from "src/@core/components/icon";
 import Fade, { FadeProps } from '@mui/material/Fade'
@@ -30,6 +30,7 @@ interface DenunciaType {
     hora_hecho: string
     lugar_hecho: string
     tipo_denuncia: ComplaintType | null
+    isNegative: boolean
     infractores: Infractor[]
     description: string
 }
@@ -73,7 +74,17 @@ const Denuncia = ({ open, toggle, confirmed }: Props) => {
                             <CardHeader title='Denuncia real' />
                             <CardContent>
                                 <Box sx={{ display: 'flex', justifyContent: 'center', height: 30, mt: 5 }}>
-                                    <Typography variant="h6">{confirmed?.tipo_denuncia?.name}</Typography>
+                                    {confirmed?.isNegative ? (
+                                        <Chip
+                                            label="Denuncia Negativa"
+                                            color="error"
+                                            variant="outlined"
+                                            sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}
+                                        />
+                                    ) : (
+                                        <Typography variant="h6">{confirmed?.tipo_denuncia?.name}</Typography>
+                                    )}
+
                                 </Box>
                                 <Divider sx={{ my: 2, mb: 3 }} />
                                 <Typography variant="body2" sx={{ mb: 3 }}>

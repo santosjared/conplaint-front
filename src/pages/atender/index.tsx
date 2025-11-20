@@ -40,6 +40,7 @@ interface DenunciaType {
     hora_hecho: string
     lugar_hecho: string
     tipo_denuncia: ComplaintType | null
+    isNegative: boolean
     infractores: Infractor[]
     description: string
     otra_denuncia: string

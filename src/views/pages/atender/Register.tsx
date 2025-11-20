@@ -1,4 +1,4 @@
-import { Autocomplete, Box, Button, Card, FormControl, FormHelperText, Grid, IconButton, TextField, Typography, useTheme } from "@mui/material"
+import { Autocomplete, Box, Button, Card, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, IconButton, TextField, Typography, useTheme } from "@mui/material"
 import { useContext, useEffect, useState } from "react"
 import Icon from 'src/@core/components/icon'
 import * as yup from 'yup'
@@ -40,6 +40,7 @@ interface DenunciaType {
     infractores: Infractor[]
     description: string
     otra_denuncia: string
+    isNegative: boolean
     _id?: string
 }
 
@@ -94,7 +95,8 @@ const defaultValues: DenunciaType = {
     tipo_denuncia: null,
     infractores: [],
     description: '',
-    otra_denuncia: ''
+    otra_denuncia: '',
+    isNegative: false,
 }
 
 interface Props {
@@ -136,7 +138,11 @@ const schema = yup.object().shape({
             image: yup.string().nullable()
         })
         .nullable()
-        .required('Debe seleccionar el tipo de denuncia'),
+        .when('isNegative', {
+            is: true,
+            then: (schema) => schema.notRequired(),
+            otherwise: (schema) => schema.required('Debe seleccionar el tipo de denuncia')
+        }),
 
     otra_denuncia: yup
         .string()
@@ -217,8 +223,7 @@ const schema = yup.object().shape({
                     .trim()
                     .notRequired()
             })
-        )
-        .min(1, 'Debe registrar al menos un arrestado')
+        ).notRequired()
 });
 
 
@@ -245,7 +250,8 @@ const AddDenuncias = ({ toggle, atendido, fetch }: Props) => {
         resolver: yupResolver(schema)
     })
 
-    const otherCompalint = watch('tipo_denuncia')
+    const otherCompalint = watch('tipo_denuncia');
+    const isNegative = watch('isNegative');
 
     useEffect(() => {
         if (atendido?.status === 'warning') {
@@ -270,11 +276,28 @@ const AddDenuncias = ({ toggle, atendido, fetch }: Props) => {
         name: 'infractores'
     })
 
+    useEffect(() => {
+        if (fields.length === 0 && !atendido?.confirmed) {
+            append({ apellido_paterno: '', apellido_materno: '', nombres: '', ci: '', edad: 30, ocupation: '', alias: '' })
+        }
+    }, [atendido])
+
+    useEffect(() => {
+        if (isNegative) {
+            if (fields.length > 0) {
+                remove();
+            }
+
+        }
+    }, [isNegative]);
+
+
     const handleAdd = () => {
         append({ apellido_paterno: '', apellido_materno: '', nombres: '', ci: '', edad: 30, ocupation: '', alias: '' })
     }
 
     const onSubmit = async (data: DenunciaType) => {
+
         try {
             const newData = {
                 ...data,
@@ -456,6 +479,21 @@ const AddDenuncias = ({ toggle, atendido, fetch }: Props) => {
                                 />
                                 {errors.tipo_denuncia && (<FormHelperText sx={{ color: 'error.main' }}>{errors.tipo_denuncia.message}</FormHelperText>
                                 )}
+                                <Controller
+                                    name="isNegative"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    {...field}
+                                                    checked={!!field.value} // asegura que sea booleano
+                                                />
+                                            }
+                                            label="Denuncia negativa"
+                                        />
+                                    )}
+                                />
                             </FormControl>
                         </Grid>
                         {otherCompalint?.name == 'Otro' &&
@@ -637,7 +675,7 @@ const AddDenuncias = ({ toggle, atendido, fetch }: Props) => {
 
                             ))}
                         </Grid>
-                        <Grid item xs={12}>
+                        {!isNegative && <Grid item xs={12}>
                             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
                                 <IconButton
                                     onClick={handleAdd}
@@ -650,7 +688,7 @@ const AddDenuncias = ({ toggle, atendido, fetch }: Props) => {
                             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
                                 {errors.infractores && <FormHelperText sx={{ color: 'error.main' }}>{errors.infractores.message}</FormHelperText>}
                             </Box>
-                        </Grid>
+                        </Grid>}
                         <Grid item xs={12}>
                             <FormControl fullWidth sx={{ mb: 6 }}>
                                 <Controller

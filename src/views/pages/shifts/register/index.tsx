@@ -51,18 +51,13 @@ interface Props {
     defaultValues?: ShiftsType
 }
 
-const showErrors = (field: string, valueLen: number, min: number) => {
-    if (valueLen === 0) return `El campo ${field} es requerido`
-    if (valueLen > 0 && valueLen < min) return `El campo ${field} debe tener al menos ${min} caracteres`
-
-    return ''
-}
 
 const schema = yup.object().shape({
     grade: yup.object({
         _id: yup.string().required('El campo grado es requerido'),
         name: yup.string().required('El campo grado es requerido'),
     }).required('El campo grado es requerido'),
+
     otherGrade: yup
         .string()
         .when('grade', {
@@ -70,32 +65,54 @@ const schema = yup.object().shape({
             then: schema => schema.required('Debe especificar otro tipo de grado'),
             otherwise: schema => schema.notRequired()
         }),
+
     date: yup
         .string()
         .required('El campo fecha es requerido'),
+
     supervisor: yup.string()
         .transform(value => (value === '' ? undefined : value))
         .required('El campo supervisor es requerido')
-        .min(4, 'El campo supervisor debe tener al menos 4 caracteres')
+        .min(4, 'El campo supervisor debe tener at least 4 caracteres')
         .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El campo supervisor solo debe contener letras'),
+
     hrs: yup
         .array()
         .of(
             yup.object().shape({
                 name: yup
                     .string()
-                    .required('El nombre del rango es requerido')
-                    .min(3, obj => showErrors('nombre del rango', obj.value.length, obj.min)),
+                    .required('El nombre del turno es requerido')
+                    .min(3, 'El nombre de turno debe tener al menos 3 caracteres'),
+
                 hrs_i: yup
                     .string()
-                    .required('Hora de entrada requerida'),
+                    .required('Hora de entrada requerida')
+                    .matches(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Formato inválido (HH:mm)'),
+
                 hrs_s: yup
                     .string()
                     .required('Hora de salida requerida')
+                    .matches(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Formato inválido (HH:mm)')
+                    .test(
+                        'is-greater',
+                        'La hora de salida debe ser mayor que la hora de entrada',
+                        function (value) {
+                            const { hrs_i } = this.parent;
+                            if (!hrs_i || !value) return true;
+
+                            const start = Number(hrs_i.replace(':', ''));
+                            const end = Number(value.replace(':', ''));
+
+                            return end > start;
+                        }
+                    ),
             })
         )
         .min(1, 'Debe agregar al menos un rango horario')
-})
+        .max(6, 'Solo es permitido hasta máximo 6 turnos')
+});
+
 
 const AddShifts = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Props) => {
     const theme = useTheme()
