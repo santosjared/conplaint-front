@@ -77,7 +77,9 @@ const schema = yup.object().shape({
     zone: yup.object().shape({
         name: yup.string().optional(),
         _id: yup.string().optional(),
-    }).optional(),
+    })
+        .nullable().
+        optional(),
     otherService: yup
         .string()
         .when('services', {

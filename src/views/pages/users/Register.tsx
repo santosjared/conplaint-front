@@ -480,22 +480,22 @@ const AddUser = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Pro
                                             CH
                                         </MenuItem>
                                         <MenuItem value='CB'>
-                                            CB
+                                            CBBA
                                         </MenuItem>
                                         <MenuItem value='OR'>
                                             OR
                                         </MenuItem>
                                         <MenuItem value='SR'>
-                                            SR
+                                            SCZ
                                         </MenuItem>
                                         <MenuItem value='BN'>
-                                            BN
+                                            BE
                                         </MenuItem>
                                         <MenuItem value='TO'>
-                                            TO
+                                            TJA
                                         </MenuItem>
                                         <MenuItem value='PA'>
-                                            PA
+                                            PD
                                         </MenuItem>
                                     </Select>
                                 )}
