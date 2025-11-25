@@ -159,10 +159,13 @@ const schema = yup.object().shape({
 
     description: yup
         .string()
-        .transform(value => (value?.trim() === '' ? undefined : value))
-        .min(10, 'El campo descripción debe tener al menos 10 caracteres')
-        .max(500, 'El campo descripción no puede tener más de 500 caracteres')
-        .notRequired(),
+        .transform(value => value === undefined || value === null ? '' : value)
+        .test('empty-or-valid', 'La descripción debe tener al menos 10 caracteres', value => {
+            if (!value) return true
+
+            return value.trim().length >= 10
+        })
+        .max(1000, 'La descripción no debe superar los 1000 caracteres'),
 
     infractores: yup
         .array()
@@ -487,7 +490,7 @@ const AddDenuncias = ({ toggle, atendido, fetch }: Props) => {
                                             control={
                                                 <Checkbox
                                                     {...field}
-                                                    checked={!!field.value} // asegura que sea booleano
+                                                    checked={!!field.value}
                                                 />
                                             }
                                             label="Denuncia negativa"

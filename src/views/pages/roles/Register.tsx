@@ -28,10 +28,13 @@ const AddRol = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Prop
 
         description: yup
             .string()
-            .transform(value => (value?.trim() === '' ? undefined : value))
-            .min(10, 'El campo descripción debe tener al menos 10 caracteres')
-            .max(200, 'El campo descripción no puede tener más de 200 caracteres')
-            .notRequired()
+            .transform(value => value === undefined || value === null ? '' : value)
+            .test('empty-or-valid', 'La descripción debe tener al menos 10 caracteres', value => {
+                if (!value) return true
+
+                return value.trim().length >= 10
+            })
+            .max(500, 'La descripción no debe superar los 500 caracteres')
     });
 
     const theme = useTheme()
@@ -57,19 +60,19 @@ const AddRol = ({ toggle, page, pageSize, mode = 'create', defaultValues }: Prop
 
         const newData = {
             name: data.name,
-            description: data.description,
+            description: data.description || '',
         };
 
         if (mode === 'edit' && defaultValues?._id) {
             dispatch(updateRol({
                 data: newData,
                 id: defaultValues._id,
-                filtrs: { skip: page * pageSize, limit: pageSize }
+                filters: { skip: page * pageSize, limit: pageSize }
             }));
         } else {
             dispatch(addRol({
                 data: newData,
-                filtrs: { skip: page * pageSize, limit: pageSize }
+                filters: { skip: page * pageSize, limit: pageSize }
             }));
         }
 
