@@ -95,7 +95,11 @@ const AuthProvider = ({ children }: Props) => {
 
   const handleLogout = () => {
 
-    instance.delete(`/auth/logout/${store.user._id}`);
+    try {
+      instance.delete(`/auth/logout/${store.user._id}`);
+    } catch (e) {
+      console.log(e)
+    }
     dispatch(setUser({ user: null, token: null, refresh_token: null }));
     window.localStorage.removeItem(authConfig.onTokenExpiration);
     window.localStorage.removeItem(authConfig.rememberMe);
