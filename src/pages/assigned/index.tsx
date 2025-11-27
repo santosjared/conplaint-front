@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardHeader, FormControl, Grid, TextField, Typography, useTheme } from "@mui/material";
+import { Box, Button, Card, CardHeader, FormControl, Grid, TextField, Typography } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "src/store";
@@ -10,11 +10,12 @@ import Icon from "src/@core/components/icon";
 import { UserType } from "src/types/types";
 import DetailAsigned from "../../views/pages/asignados/details";
 import Denuncia from "../../views/pages/asignados/denuncia";
-import { confirmarDenuncia, fetchData } from "src/store/asignes";
+import { fetchData } from "src/store/asignes";
 import Can from "src/layouts/components/acl/Can";
 import Swal from 'sweetalert2';
 import { instance } from "src/configs/axios";
 import { PDFReporte } from "src/utils/pdf-reporte";
+import Description from "src/views/pages/asignados/description";
 
 interface ComplaintType {
     name: string
@@ -130,14 +131,16 @@ const Asigned = () => {
     const [dataDetails, setDataDetails] = useState<UserPatrolsType[]>([])
     const [confirmed, setConfirmed] = useState<DenunciaType | null>(null)
     const [openConfirmed, setOpenonfirmed] = useState<boolean>(false)
+    const [openDescription, setOpenDescription] = useState<boolean>(false)
+    const [id, setId] = useState<string>('')
 
     const toggleDetails = () => setOpenDetails(!openDetails)
     const toggleConfirmed = () => setOpenonfirmed(!openConfirmed)
+    const toggleDescription = () => setOpenDescription(!openDescription)
 
     const dispatch = useDispatch<AppDispatch>()
 
-    const store = useSelector((state: RootState) => state.asignados)
-    const theme = useTheme()
+    const store = useSelector((state: RootState) => state.asignados);
     useEffect(() => {
         dispatch(fetchData({ skip: page * pageSize, limit: pageSize }))
     }, [page, pageSize])
@@ -147,18 +150,8 @@ const Asigned = () => {
     }
 
     const handleConfirmed = async (id: string) => {
-        const confirme = await Swal.fire({
-            title: '¿Estas seguro de confirmar la atención de la denuncia?',
-            icon: "warning",
-            showCancelButton: true,
-            cancelButtonColor: theme.palette.error.main,
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: theme.palette.success.main,
-            confirmButtonText: 'Confirmar',
-        }).then(async (result) => { return result.isConfirmed });
-        if (confirme) {
-            dispatch(confirmarDenuncia({ id, filters: { skip: page * pageSize, limit: pageSize } }))
-        }
+        setId(id)
+        toggleDescription()
     }
 
     const handleDenuncia = (confirmed: DenunciaType) => {
@@ -171,9 +164,14 @@ const Asigned = () => {
             const response = await instance.get('/asignados/print', {
                 params: { date }
             })
+            if (response.data.length === 0) {
+                Swal.fire("No hay reportes aun para esta fecha");
+
+                return;
+            }
             const sup = await instance.get('/users/sup', { params: { grade: 'CNL. MSc. CAD.' } })
             const { result, despachadores } = response.data
-            PDFReporte(result, despachadores, sup.data)
+            PDFReporte(result, despachadores, sup.data, date)
         } catch (e) {
             console.log(e)
             Swal.fire({
@@ -411,6 +409,7 @@ const Asigned = () => {
                 </Grid>)
             }
             <Denuncia confirmed={confirmed} open={openConfirmed} toggle={toggleConfirmed} />
+            <Description open={openDescription} toggle={toggleDescription} id={id} page={page} pageSize={pageSize} />
         </Fragment>
 
     );

@@ -31,7 +31,7 @@ export const fetchData = createAsyncThunk('asignados/fetchAsignados',
 export const confirmarDenuncia = createAsyncThunk('asignados/confirmedAsignados',
     async (data: { [key: string]: any }, { dispatch }: Redux) => {
         try {
-            const response = await instance.put(`/asignados/${data.id}`)
+            const response = await instance.put(`/asignados/${data.id}`, data.description)
             Swal.fire({
                 title: '¡Éxito!',
                 text: 'La denuncia fue confirmada',
